@@ -1,20 +1,34 @@
-import { ConfigProvider } from 'antd';
-import { NextIntlClientProvider } from 'next-intl';
-import ReactQueryProvider from '@/provider/ReactQueryProvider';
+// app/layout.tsx
+import { ConfigProvider } from "antd";
+import { getMessages } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import ReactQueryProvider from "@/provider/ReactQueryProvider";
+import { cookies } from "next/headers";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // Get locale from cookie (server-side)
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("locale")?.value || "en";
+
+  // Get messages for current locale
+  const messages = await getMessages();
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body>
         <ConfigProvider
           theme={{
             token: {
-              colorPrimary: '#1677ff',
+              colorPrimary: "#1677ff",
               borderRadius: 6,
             },
           }}
         >
-          <NextIntlClientProvider>
+          <NextIntlClientProvider locale={locale} messages={messages}>
             <ReactQueryProvider>{children}</ReactQueryProvider>
           </NextIntlClientProvider>
         </ConfigProvider>

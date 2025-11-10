@@ -16,7 +16,10 @@ export async function GET(req: Request) {
   }
 
   const start = (page - 1) * 10;
-  const paginated = filtered.slice(start, start + 10);
+  const paginated = filtered.slice(start, start + 10).map((c) => ({
+    ...c,
+    id: c.id.toString(), // ✅ Convert BigInt to string
+  }));
 
   return NextResponse.json({
     data: paginated,
@@ -39,5 +42,37 @@ export async function POST(req: Request) {
     modifier_id: null,
   };
   categories.push(newCat);
-  return NextResponse.json(newCat, { status: 201 });
+  
+  return NextResponse.json(
+    {
+      ...newCat,
+      id: newCat.id.toString(), // ✅ Convert BigInt to string
+    },
+    { status: 201 }
+  );
+}
+
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+
+  if (!id) {
+    return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+  }
+
+  const index = categories.findIndex((c) => c.id === BigInt(id));
+
+  if (index === -1) {
+    return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+  }
+
+  const deleted = categories.splice(index, 1)[0];
+
+  return NextResponse.json({
+    message: 'Category deleted successfully',
+    data: {
+      ...deleted,
+      id: deleted.id.toString(), // ✅ Convert BigInt to string
+    },
+  });
 }

@@ -1,14 +1,27 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { usePosts } from '@/hooks/usePosts';
-import { useCategories } from '@/hooks/useCategories';
-import Link from 'next/link';
-import { Table, Input, Button, Select, Space, Popconfirm, message, Typography } from 'antd';
-import { PlusOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
-import { Category } from '@/types';
+import { useState } from "react";
+import { usePosts } from "@/hooks/usePosts";
+import { useCategories } from "@/hooks/useCategories";
+import Link from "next/link";
+import {
+  Table,
+  Input,
+  Button,
+  Select,
+  Space,
+  Popconfirm,
+  message,
+  Typography,
+} from "antd";
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import { Category } from "@/types";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 export default function PostsPage() {
   const {
@@ -23,6 +36,7 @@ export default function PostsPage() {
     isLoading,
     remove,
   } = usePosts();
+
   const categories = useCategories();
   const [searchInput, setSearchInput] = useState(search);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -36,9 +50,9 @@ export default function PostsPage() {
     try {
       setLoadingId(id);
       await remove(id);
-      message.success('Đã xóa bài viết');
+      message.success("Đã xóa bài viết");
     } catch (err) {
-      message.error('Xóa thất bại');
+      message.error("Xóa thất bại");
     } finally {
       setLoadingId(null);
     }
@@ -46,34 +60,39 @@ export default function PostsPage() {
 
   const columns = [
     {
-      title: 'Tiêu đề',
-      dataIndex: 'title_vi',
-      key: 'title_vi',
+      title: "Tiêu đề",
+      dataIndex: "title_vi",
+      key: "title_vi",
       render: (text: string, record: any) => (
-        <Link href={`/admin/posts/${record.id}`}>
-          <Typography.Link>{text}</Typography.Link>
+        <Link
+          href={`/admin/posts/${record.id}`}
+          style={{ textDecoration: "none" }}
+        >
+          <Text underline>{text}</Text>
         </Link>
       ),
     },
     {
-      title: 'Danh mục',
-      dataIndex: 'category_id',
-      key: 'category_id',
+      title: "Danh mục",
+      dataIndex: "category_id",
+      key: "category_id",
       render: (id: string) => {
-        const category = categories.data.find((c: Category) => c.id === BigInt(id));
-        return category ? category.name_vi : 'N/A';
+        const category = categories.data.find(
+          (c: Category) => c.id === BigInt(id)
+        );
+        return category ? category.name_vi : "N/A";
       },
     },
     {
-      title: 'Ngày tạo',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (val: string) => new Date(val).toLocaleDateString('vi-VN'),
+      title: "Ngày tạo",
+      dataIndex: "created_at",
+      key: "created_at",
+      render: (val: string) => new Date(val).toLocaleDateString("vi-VN"),
     },
     {
-      title: 'Thao tác',
-      key: 'actions',
-      align: 'right' as const,
+      title: "Thao tác",
+      key: "actions",
+      align: "right" as const,
       render: (record: any) => (
         <Popconfirm
           title="Xóa bài viết này?"
@@ -81,7 +100,12 @@ export default function PostsPage() {
           okText="Xóa"
           cancelText="Hủy"
         >
-          <Button danger type="text" loading={loadingId === record.id} icon={<DeleteOutlined />} />
+          <Button
+            danger
+            type="text"
+            loading={loadingId === record.id}
+            icon={<DeleteOutlined />}
+          />
         </Popconfirm>
       ),
     },
@@ -91,7 +115,11 @@ export default function PostsPage() {
     <div style={{ padding: 24 }}>
       <Space
         align="center"
-        style={{ width: '100%', justifyContent: 'space-between', marginBottom: 24 }}
+        style={{
+          width: "100%",
+          justifyContent: "space-between",
+          marginBottom: 24,
+        }}
       >
         <Title level={3}>Quản lý bài viết</Title>
         <Link href="/admin/posts/new">
@@ -101,7 +129,13 @@ export default function PostsPage() {
         </Link>
       </Space>
 
-      <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
+      <Space
+        style={{
+          marginBottom: 16,
+          width: "100%",
+          justifyContent: "space-between",
+        }}
+      >
         <Space>
           <Input
             placeholder="Tìm kiếm bài viết..."
@@ -119,12 +153,12 @@ export default function PostsPage() {
           placeholder="Tất cả danh mục"
           value={categoryId || undefined}
           onChange={(val) => {
-            setCategoryId(val || '');
+            setCategoryId(val || "");
             setPage(1);
           }}
           style={{ width: 200 }}
           options={[
-            { label: 'Tất cả danh mục', value: '' },
+            { label: "Tất cả danh mục", value: "" },
             ...categories.data.map((cat: Category) => ({
               label: cat.name_vi,
               value: cat.id,

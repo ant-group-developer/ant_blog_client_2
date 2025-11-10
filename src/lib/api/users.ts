@@ -1,4 +1,4 @@
-const API = '/api/users';
+const API = '/mock_api/users';
 
 export const userApi = {
   getList: (page = 1, search = '') => {
