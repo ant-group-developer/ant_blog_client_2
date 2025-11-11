@@ -4,7 +4,6 @@ import { Card, Typography, Space, Tag, Divider } from 'antd';
 import { useTranslations, useLocale } from 'next-intl';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { GlobalOutlined, TranslationOutlined } from '@ant-design/icons';
-import PostsPage from './(admin)/admin/posts/page';
 
 const { Title, Paragraph, Text } = Typography;
 

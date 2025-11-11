@@ -1,70 +1,171 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  ProLayout,
-  PageContainer,
-  MenuDataItem,
-} from "@ant-design/pro-components";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import React, { useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { ProLayout } from '@ant-design/pro-components';
+import type { ProSettings } from '@ant-design/pro-components';
 import {
   HomeOutlined,
   UserOutlined,
   UnorderedListOutlined,
-} from "@ant-design/icons";
+  LogoutOutlined,
+  SettingOutlined,
+  QuestionCircleOutlined,
+  GithubOutlined,
+  LoginOutlined,
+} from '@ant-design/icons';
+import { Button, Space, Dropdown, Spin } from 'antd';
+import type { MenuProps } from 'antd';
+import type { User } from '@/types';
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const defaultProps = {
+  route: {
+    path: '/',
+    routes: [
+      { path: '/admin', name: 'Dashboard', icon: <HomeOutlined /> },
+      { path: '/admin/users', name: 'Người dùng', icon: <UserOutlined /> },
+      { path: '/admin/posts', name: 'Bài viết', icon: <UnorderedListOutlined /> },
+      { path: '/admin/categories', name: 'Danh mục', icon: <UnorderedListOutlined /> },
+    ],
+  },
+};
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Giữ collapsed cố định ban đầu để không lệch SSR
-  const [collapsed, setCollapsed] = useState(false);
+  const [settings] = useState<Partial<ProSettings>>({
+    fixSiderbar: true,
+    layout: 'mix',
+    splitMenus: false,
+  });
 
-  // ✅ Chỉ lấy pathname sau khi client mount (tránh SSR mismatch)
-  const [currentPath, setCurrentPath] = useState<string | null>(null);
+  // Load user from localStorage
   useEffect(() => {
-    setCurrentPath(pathname);
-  }, [pathname]);
+    const stored = localStorage.getItem('currentUser');
+    if (stored) {
+      try {
+        const user = JSON.parse(stored) as User;
+        setCurrentUser(user);
+      } catch {
+        localStorage.removeItem('currentUser');
+      }
+    }
+    setLoading(false);
+  }, []);
 
-  // ✅ Menu cố định (không phụ thuộc giá trị thay đổi)
-  const menuItems: MenuDataItem[] = [
-    { path: "/admin/users", name: "Users", icon: <UserOutlined /> },
-    { path: "/admin/posts", name: "Posts", icon: <UnorderedListOutlined /> },
-    { path: "/admin/categories", name: "Categories", icon: <HomeOutlined /> },
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('currentUser');
+    setCurrentUser(null);
+    router.push('/auth/login');
+  };
+
+  const avatarMenu: MenuProps['items'] = [
+    {
+      key: 'email',
+      label: <span>{currentUser?.email || 'User'}</span>,
+      disabled: true,
+    },
+    { type: 'divider' },
+    {
+      key: 'logout',
+      label: (
+        <Space>
+          <LogoutOutlined />
+          Đăng xuất
+        </Space>
+      ),
+      onClick: handleLogout,
+    },
   ];
 
-  // ⚡ Tránh render khi chưa có pathname (chờ đến khi client mount)
-  if (!currentPath) return null;
+  if (loading) {
+    return (
+      <div
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+      >
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
-    <NuqsAdapter>
+    <div style={{ height: '100vh', overflow: 'hidden' }}>
       <ProLayout
+        {...defaultProps}
         title="Admin Panel"
-        layout="mix"
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        siderWidth={200}
-        menuDataRender={() => menuItems}
+        logo="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
+        location={{ pathname }}
+        layout={settings.layout}
+        splitMenus={settings.splitMenus}
+        fixSiderbar={settings.fixSiderbar}
+        siderWidth={208}
+        // Loại bỏ padding mặc định của content
+        contentStyle={{ padding: 0, margin: 0 }}
+        token={{
+          header: { colorBgMenuItemSelected: 'rgba(0,0,0,0.04)' },
+          sider: { colorMenuBackground: '#fff' },
+        }}
+        avatarProps={
+          currentUser
+            ? {
+                src: 'https://gw.alipayobjects.com/zos/antfincdn/efFD%24IOql2/weixintupian_20170331104822.jpg',
+                size: 'small',
+                title: currentUser.email || 'User',
+                render: (_, dom) => (
+                  <Dropdown menu={{ items: avatarMenu }} placement="bottomRight">
+                    {dom}
+                  </Dropdown>
+                ),
+              }
+            : {
+                render: () => (
+                  <Button
+                    type="primary"
+                    icon={<LoginOutlined />}
+                    onClick={() => router.push('/auth/login')}
+                  >
+                    Đăng nhập
+                  </Button>
+                ),
+              }
+        }
+        actionsRender={(props) => {
+          if (props.isMobile) return [];
+          return [
+            <QuestionCircleOutlined key="doc" style={{ fontSize: 16 }} />,
+            <GithubOutlined key="github" style={{ fontSize: 16 }} />,
+            <SettingOutlined key="settings" style={{ fontSize: 16 }} />,
+          ];
+        }}
         menuItemRender={(item, dom) => (
-          <div
-            onClick={() => {
-              if (item.path) router.push(item.path);
+          <a
+            onClick={(e) => {
+              e.preventDefault();
+              router.push(item.path || '/admin');
             }}
+            style={{ display: 'block' }}
           >
             {dom}
-          </div>
+          </a>
         )}
-        // ✅ Avatar dùng ảnh cố định để không random giữa server/client
-        avatarProps={{ src: "/static/avatar.png", size: "small" }}
-        actionsRender={() => [<span key="1">Hi, Admin</span>]}
       >
-        <PageContainer>{children}</PageContainer>
+        {/* Nội dung chính - không dùng PageContainer để tránh double header & padding thừa */}
+        <div
+          style={{
+            padding: 24,
+            background: '#f5f5f5',
+            minHeight: 'calc(100vh - 64px)', // 64px = chiều cao header
+            overflow: 'auto',
+          }}
+        >
+          {children}
+        </div>
       </ProLayout>
-    </NuqsAdapter>
+    </div>
   );
 }
