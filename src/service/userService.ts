@@ -34,7 +34,8 @@ export const userService = {
     if (data?.accessToken && data?.data) {
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
-      localStorage.setItem('currentUser', JSON.stringify(data.data));
+      const { setCurrentUser } = (await import('@/store/authStore')).useAuthStore.getState();
+      setCurrentUser(data.data);
     }
 
     return data;

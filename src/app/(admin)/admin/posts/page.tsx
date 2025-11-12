@@ -1,185 +1,214 @@
-// "use client";
+'use client';
 
-// import { useState } from "react";
-// import { usePosts } from "@/hooks/usePosts";
-// import { useCategories } from "@/hooks/useCategories";
-// import Link from "next/link";
-// import {
-//   Table,
-//   Input,
-//   Button,
-//   Select,
-//   Space,
-//   Popconfirm,
-//   message,
-//   Typography,
-// } from "antd";
-// import {
-//   PlusOutlined,
-//   DeleteOutlined,
-//   SearchOutlined,
-// } from "@ant-design/icons";
-// import { Category } from "@/types";
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { ProTable, TableDropdown, type ProColumns } from '@ant-design/pro-components';
+import { Avatar, message, Space, Image, Tag, Button, Input } from 'antd';
+import { EditOutlined, FileTextOutlined, PictureOutlined, PlusOutlined } from '@ant-design/icons';
+import { usePosts, useUpdatePost } from '@/hooks/usePosts';
+import { useAuthStore } from '@/store/authStore';
+import PostEdit from '@/components/post/PostEdit';
+import { Post } from '@/types';
+import { useLocale } from 'next-intl';
+import { PageContainer } from '@ant-design/pro-components';
 
-// const { Title, Text } = Typography;
+const { Search } = Input;
 
-// export default function PostsPage() {
-//   const {
-//     data,
-//     total,
-//     page,
-//     setPage,
-//     search,
-//     setSearch,
-//     categoryId,
-//     setCategoryId,
-//     isLoading,
-//     remove,
-//   } = usePosts();
+export default function PostListPage() {
+  const router = useRouter();
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [messageApi, contextHolder] = message.useMessage();
+  const locale = useLocale(); // 'vi' | 'en'
+  const { currentUser } = useAuthStore();
 
-//   const categories = useCategories();
-//   const [searchInput, setSearchInput] = useState(search);
-//   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [params, setParams] = useState({
+    page: 1,
+    pageSize: 10,
+    keyword: '',
+  });
 
-//   const handleSearch = () => {
-//     setSearch(searchInput);
-//     setPage(1);
-//   };
+  const { data, isLoading } = usePosts(params);
+  const updateMutation = useUpdatePost();
 
-//   const handleDelete = async (id: string) => {
-//     try {
-//       setLoadingId(id);
-//       await remove(id);
-//       message.success("Đã xóa bài viết");
-//     } catch (err) {
-//       message.error("Xóa thất bại");
-//     } finally {
-//       setLoadingId(null);
-//     }
-//   };
+  const handleUpdate = (post: Post) => {
+    updateMutation.mutate(
+      { id: post.id, payload: post },
+      {
+        onSuccess: () => {
+          messageApi.success(locale === 'vi' ? 'Cập nhật thành công!' : 'Updated successfully!');
+          setEditingPost(null);
+        },
+        onError: (err: any) => {
+          messageApi.error(
+            err.response?.data?.message || (locale === 'vi' ? 'Cập nhật thất bại' : 'Update failed')
+          );
+        },
+      }
+    );
+  };
 
-//   const columns = [
-//     {
-//       title: "Tiêu đề",
-//       dataIndex: "title_vi",
-//       key: "title_vi",
-//       render: (text: string, record: any) => (
-//         <Link
-//           href={`/admin/posts/${record.id}`}
-//           style={{ textDecoration: "none" }}
-//         >
-//           <Text underline>{text}</Text>
-//         </Link>
-//       ),
-//     },
-//     {
-//       title: "Danh mục",
-//       dataIndex: "category_id",
-//       key: "category_id",
-//       render: (id: string) => {
-//         const category = categories.data.find(
-//           (c: Category) => c.id === BigInt(id)
-//         );
-//         return category ? category.name_vi : "N/A";
-//       },
-//     },
-//     {
-//       title: "Ngày tạo",
-//       dataIndex: "created_at",
-//       key: "created_at",
-//       render: (val: string) => new Date(val).toLocaleDateString("vi-VN"),
-//     },
-//     {
-//       title: "Thao tác",
-//       key: "actions",
-//       align: "right" as const,
-//       render: (record: any) => (
-//         <Popconfirm
-//           title="Xóa bài viết này?"
-//           onConfirm={() => handleDelete(record.id)}
-//           okText="Xóa"
-//           cancelText="Hủy"
-//         >
-//           <Button
-//             danger
-//             type="text"
-//             loading={loadingId === record.id}
-//             icon={<DeleteOutlined />}
-//           />
-//         </Popconfirm>
-//       ),
-//     },
-//   ];
+  const columns: ProColumns<Post>[] = [
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 100,
+      search: false,
+      render: (id) => (
+        <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{String(id).slice(0, 8)}...</span>
+      ),
+    },
+    {
+      title: locale === 'vi' ? 'Bài viết' : 'Post',
+      dataIndex: 'title_vi',
+      fieldProps: { placeholder: locale === 'vi' ? 'Tìm theo tiêu đề...' : 'Search by title...' },
+      render: (_, record) => {
+        const title = locale === 'vi' ? record.title_vi : record.title_en || record.title_vi;
+        const description =
+          locale === 'vi' ? record.description_vi : record.description_en || record.description_vi;
 
-//   return (
-//     <div style={{ padding: 24 }}>
-//       <Space
-//         align="center"
-//         style={{
-//           width: "100%",
-//           justifyContent: "space-between",
-//           marginBottom: 24,
-//         }}
-//       >
-//         <Title level={3}>Quản lý bài viết</Title>
-//         <Link href="/admin/posts/new">
-//           <Button type="primary" icon={<PlusOutlined />}>
-//             Thêm bài viết
-//           </Button>
-//         </Link>
-//       </Space>
+        return (
+          <Space>
+            {record.thumbnail ? (
+              <Image
+                src={record.thumbnail}
+                width={40}
+                height={40}
+                style={{ objectFit: 'cover', borderRadius: 4 }}
+                preview={false}
+              />
+            ) : (
+              <Avatar size={40} icon={<PictureOutlined />} />
+            )}
+            <div style={{ maxWidth: 300 }}>
+              <div>
+                <strong>{title}</strong>
+                {currentUser?.id === record.creator_id && (
+                  <Tag color="blue" style={{ marginLeft: 8 }}>
+                    {locale === 'vi' ? 'Bạn' : 'You'}
+                  </Tag>
+                )}
+              </div>
+              {description && (
+                <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
+                  {description.slice(0, 50)}...
+                </div>
+              )}
+            </div>
+          </Space>
+        );
+      },
+    },
+    {
+      title: locale === 'vi' ? 'Tạo lúc' : 'Created At',
+      dataIndex: 'created_at',
+      width: 160,
+      search: false,
+      render: (_, record) =>
+        record.created_at
+          ? new Date(record.created_at).toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US')
+          : '-',
+    },
+    {
+      title: locale === 'vi' ? 'Cập nhật lúc' : 'Updated At',
+      dataIndex: 'updated_at',
+      width: 160,
+      search: false,
+      render: (_, record) =>
+        record.updated_at
+          ? new Date(record.updated_at).toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US')
+          : '-',
+    },
+    {
+      title: locale === 'vi' ? 'Hành động' : 'Actions',
+      key: 'action',
+      width: 80,
+      fixed: 'right',
+      search: false,
+      render: (_, record) => {
+        const isOwner = currentUser?.id === record.creator_id;
+        return (
+          <TableDropdown
+            menus={[
+              {
+                key: 'edit',
+                name: locale === 'vi' ? 'Sửa' : 'Edit',
+                icon: <EditOutlined />,
+                onClick: () => setEditingPost(record),
+                disabled: !isOwner,
+              },
+            ]}
+          />
+        );
+      },
+    },
+  ];
 
-//       <Space
-//         style={{
-//           marginBottom: 16,
-//           width: "100%",
-//           justifyContent: "space-between",
-//         }}
-//       >
-//         <Space>
-//           <Input
-//             placeholder="Tìm kiếm bài viết..."
-//             value={searchInput}
-//             onChange={(e) => setSearchInput(e.target.value)}
-//             onPressEnter={handleSearch}
-//             prefix={<SearchOutlined />}
-//             style={{ width: 250 }}
-//           />
-//           <Button onClick={handleSearch}>Tìm kiếm</Button>
-//         </Space>
+  return (
+    <>
+      {contextHolder}
+      <PageContainer
+        title="Quản lý bài viết"
+        breadcrumb={undefined} // ← xóa span Dashboard / Post
+        content={
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginTop: 16,
+            }}
+          >
+            <Search
+              placeholder="Tìm kiếm bài viết..."
+              onSearch={(value) => {
+                setParams((prev) => ({ ...prev, keyword: value, page: 1 }));
+              }}
+              allowClear
+              enterButton
+              style={{ width: 320 }}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => router.push('/admin/posts/create')}
+            >
+              {locale === 'vi' ? 'Tạo bài viết' : 'Create Post'}
+            </Button>
+          </div>
+        }
+      >
+        <div style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
+          <ProTable<Post>
+            columns={columns}
+            rowKey="id"
+            dataSource={data?.data}
+            loading={isLoading}
+            pagination={{
+              total: data?.total,
+              current: params.page,
+              pageSize: params.pageSize,
+              showQuickJumper: true,
+              showSizeChanger: true,
+              pageSizeOptions: ['10', '20', '50'],
+              onChange: (page, pageSize) => setParams((p) => ({ ...p, page, pageSize })),
+            }}
+            onSubmit={(values: { title_vi?: string }) =>
+              setParams((p) => ({ ...p, keyword: values.title_vi || '', page: 1 }))
+            }
+            onReset={() => setParams((p) => ({ ...p, keyword: '', page: 1 }))}
+            toolBarRender={false}
+            search={false}
+            scroll={{ x: 1200 }}
+          />
+        </div>
+      </PageContainer>
 
-//         <Select
-//           allowClear
-//           placeholder="Tất cả danh mục"
-//           value={categoryId || undefined}
-//           onChange={(val) => {
-//             setCategoryId(val || "");
-//             setPage(1);
-//           }}
-//           style={{ width: 200 }}
-//           options={[
-//             { label: "Tất cả danh mục", value: "" },
-//             ...categories.data.map((cat: Category) => ({
-//               label: cat.name_vi,
-//               value: cat.id,
-//             })),
-//           ]}
-//         />
-//       </Space>
-
-//       <Table
-//         loading={isLoading}
-//         columns={columns}
-//         dataSource={data}
-//         rowKey="id"
-//         pagination={{
-//           current: page,
-//           total,
-//           pageSize: 10,
-//           onChange: (p) => setPage(p),
-//           showTotal: (t) => `Tổng ${t} bài viết`,
-//         }}
-//       />
-//     </div>
-//   );
-// }
+      <PostEdit
+        open={!!editingPost}
+        onClose={() => setEditingPost(null)}
+        post={editingPost}
+        onUpdate={handleUpdate}
+      />
+    </>
+  );
+}

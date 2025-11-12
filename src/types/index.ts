@@ -10,7 +10,7 @@ export type User = {
 };
 
 export type Category = {
-  id: bigint;
+  id: string;
   slug: string;
   name_vi: string;
   name_en: string;
@@ -22,16 +22,16 @@ export type Category = {
 };
 
 export type Post = {
-  id: bigint;
+  id: string;
   slug: string;
   title_vi: string;
-  title_en: string;
+  title_en: string | undefined;
   description_vi: string;
-  description_en: string;
+  description_en: string | undefined;
   content_vi: string;
-  content_en: string;
-  thumbnail: string;
-  category_id: bigint;
+  content_en: string | undefined;
+  thumbnail: string | null;
+  category_id: string;
   creator_id: string;
   modifier_id: string | null;
   created_at: string;

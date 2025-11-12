@@ -1,61 +1,53 @@
 'use client';
-
-import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import {
-  ProCard,
   ProTable,
   TableDropdown,
-  type ActionType,
   type ProColumns,
+  PageContainer,
 } from '@ant-design/pro-components';
-import { Tag, Avatar, message, Space } from 'antd';
+import { Tag, Avatar, message, Space, Input } from 'antd';
 import { EditOutlined, UserOutlined } from '@ant-design/icons';
-import { userService } from '@/service/userService';
-import type { User } from '@/types';
+import { useUsers, useUpdateUser } from '@/hooks/useUsers';
+import { useAuthStore } from '@/store/authStore';
 import UserEdit from '@/components/user/UserEdit';
+import { User } from '@/types';
+import { useLocale } from 'next-intl';
+
+const { Search } = Input;
 
 export default function UserListPage() {
   const router = useRouter();
-  const actionRef = useRef<ActionType>(null!);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { currentUser } = useAuthStore();
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
+  const locale = useLocale(); // 'vi' | 'en'
 
-  useEffect(() => {
-    const stored = localStorage.getItem('currentUser');
-    if (stored) {
-      try {
-        setCurrentUser(JSON.parse(stored));
-      } catch (e) {
-        console.error('Parse currentUser error:', e);
+  const [params, setParams] = useState({
+    page: 1,
+    pageSize: 10,
+    keyword: '',
+  });
+
+  const { data, isLoading } = useUsers(params);
+  const updateMutation = useUpdateUser();
+
+  const handleUpdate = (user: User) => {
+    updateMutation.mutate(
+      { id: user.id, payload: user },
+      {
+        onSuccess: () => {
+          messageApi.success(locale === 'vi' ? 'Cập nhật thành công!' : 'Updated successfully!');
+          setEditingUser(null);
+        },
+        onError: (err: any) => {
+          messageApi.error(
+            err.response?.data?.message || (locale === 'vi' ? 'Cập nhật thất bại' : 'Update failed')
+          );
+        },
       }
-    }
-  }, []);
-
-  const handleUpdateUser = async (updatedUser: User) => {
-    try {
-      const res = await userService.updateUser(updatedUser.id, updatedUser);
-      const updated = res.data;
-
-      actionRef.current?.reload();
-
-      if (currentUser?.id === updated.id) {
-        localStorage.setItem('currentUser', JSON.stringify(updated));
-        setCurrentUser(updated);
-      }
-
-      messageApi.success('Cập nhật thành công!');
-      setEditingUser(null);
-    } catch (error: any) {
-      messageApi.error(error.response?.data?.message || 'Cập nhật thất bại');
-    }
-  };
-
-  const formatDate = (value: any): string => {
-    if (!value) return '-';
-    const date = new Date(String(value));
-    return isNaN(date.getTime()) ? '-' : date.toLocaleString('vi-VN');
+    );
   };
 
   const columns: ProColumns<User>[] = [
@@ -69,48 +61,60 @@ export default function UserListPage() {
       ),
     },
     {
-      title: 'Email',
-      dataIndex: 'keyword',
-      fieldProps: {
-        placeholder: 'Nhập email để tìm kiếm',
-      },
+      title: locale === 'vi' ? 'Email' : 'Email',
+      dataIndex: 'email',
+      search: false,
       render: (_, record) => (
         <Space>
           <Avatar size="small" icon={<UserOutlined />} />
           <strong>{record.email}</strong>
           {currentUser?.id === record.id && (
             <Tag color="blue" style={{ marginLeft: 8 }}>
-              Bạn
+              {locale === 'vi' ? 'Bạn' : 'You'}
             </Tag>
           )}
         </Space>
       ),
     },
     {
-      title: 'Trạng thái',
+      title: locale === 'vi' ? 'Trạng thái' : 'Status',
       dataIndex: 'status',
       width: 140,
       search: false,
       render: (status) => (
-        <Tag color={status ? 'green' : 'red'}>{status ? 'Online' : 'Offline'}</Tag>
+        <Tag color={status ? 'green' : 'red'}>
+          {status
+            ? locale === 'vi'
+              ? 'Online'
+              : 'Online'
+            : locale === 'vi'
+            ? 'Offline'
+            : 'Offline'}
+        </Tag>
       ),
     },
     {
-      title: 'Tạo lúc',
+      title: locale === 'vi' ? 'Tạo lúc' : 'Created At',
       dataIndex: 'created_at',
       width: 160,
       search: false,
-      render: formatDate,
+      render: (_, record) =>
+        record.created_at
+          ? new Date(record.created_at).toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US')
+          : '-',
     },
     {
-      title: 'Cập nhật lúc',
+      title: locale === 'vi' ? 'Cập nhật lúc' : 'Updated At',
       dataIndex: 'updated_at',
       width: 160,
       search: false,
-      render: formatDate,
+      render: (_, record) =>
+        record.updated_at
+          ? new Date(record.updated_at).toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US')
+          : '-',
     },
     {
-      title: 'Hành động',
+      title: locale === 'vi' ? 'Hành động' : 'Actions',
       key: 'action',
       width: 80,
       fixed: 'right',
@@ -122,7 +126,7 @@ export default function UserListPage() {
             menus={[
               {
                 key: 'edit',
-                name: 'Sửa',
+                name: locale === 'vi' ? 'Sửa' : 'Edit',
                 icon: <EditOutlined />,
                 onClick: () => setEditingUser(record),
                 disabled: !isMe,
@@ -134,83 +138,61 @@ export default function UserListPage() {
     },
   ];
 
-  const request = async (params: any) => {
-    const { current = 1, pageSize = 10, keyword = '' } = params;
-
-    try {
-      const res = await userService.getUsers({
-        page: current,
-        pageSize,
-        keyword,
-      });
-
-      return {
-        data: res.data || [],
-        success: true,
-        total: res.pagination?.totalItem || 0,
-      };
-    } catch (error: any) {
-      console.error('Load users error:', error);
-      messageApi.error(error.response?.data?.message || 'Lấy dữ liệu thất bại');
-      return { data: [], success: false, total: 0 };
-    }
-  };
-
   return (
     <>
       {contextHolder}
-
-      <ProCard
-        title={
-          <Space>
-            <UserOutlined />
-            Quản lý người dùng
-          </Space>
+      <PageContainer
+        title={locale === 'vi' ? 'Quản lý người dùng' : 'User Management'}
+        breadcrumb={undefined}
+        content={
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginTop: 16,
+            }}
+          >
+            <Search
+              placeholder={locale === 'vi' ? 'Tìm kiếm người dùng...' : 'Search users...'}
+              onSearch={(value) => {
+                setParams((prev) => ({ ...prev, keyword: value, page: 1 }));
+              }}
+              allowClear
+              enterButton
+              style={{ width: 320 }}
+            />
+          </div>
         }
-        extra={
-          currentUser && (
-            <span style={{ color: '#888' }}>
-              Đang đăng nhập: <strong>{currentUser.email}</strong>
-            </span>
-          )
-        }
-        headerBordered
-        style={{ margin: 24 }}
       >
-        <ProTable<User>
-          columns={columns}
-          rowKey="id"
-          actionRef={actionRef}
-          request={request}
-          pagination={{
-            showQuickJumper: true,
-            showSizeChanger: true,
-            pageSizeOptions: ['10', '20', '50'],
-            defaultPageSize: 10,
-          }}
-          search={{
-            labelWidth: 'auto',
-            filterType: 'query',
-            defaultCollapsed: false,
-            searchText: 'Tìm kiếm',
-            resetText: 'Làm mới',
-          }}
-          toolBarRender={false}
-          options={{
-            reload: true,
-            density: false,
-            setting: false,
-          }}
-          scroll={{ x: 1000 }}
-        />
-      </ProCard>
+        <div style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
+          <ProTable<User>
+            columns={columns}
+            rowKey="id"
+            dataSource={data?.data}
+            loading={isLoading}
+            pagination={{
+              total: data?.total,
+              current: params.page,
+              pageSize: params.pageSize,
+              showQuickJumper: true,
+              showSizeChanger: true,
+              pageSizeOptions: ['10', '20', '50'],
+              onChange: (page, pageSize) => setParams((p) => ({ ...p, page, pageSize })),
+            }}
+            toolBarRender={false}
+            search={false}
+            scroll={{ x: 1200 }}
+          />
+        </div>
+      </PageContainer>
 
       <UserEdit
         open={!!editingUser}
         onClose={() => setEditingUser(null)}
         user={editingUser}
         currentUserId={currentUser?.id}
-        onUpdate={handleUpdateUser}
+        onUpdate={handleUpdate}
       />
     </>
   );

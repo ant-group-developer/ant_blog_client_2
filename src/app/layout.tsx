@@ -1,4 +1,4 @@
-// app/layout.tsx
+import '@ant-design/v5-patch-for-react-19';
 import { ConfigProvider } from 'antd';
 import { getMessages } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';

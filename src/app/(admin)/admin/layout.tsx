@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ProLayout } from '@ant-design/pro-components';
 import type { ProSettings } from '@ant-design/pro-components';
@@ -9,14 +9,14 @@ import {
   UserOutlined,
   UnorderedListOutlined,
   LogoutOutlined,
-  SettingOutlined,
-  QuestionCircleOutlined,
-  GithubOutlined,
   LoginOutlined,
+  GithubOutlined,
 } from '@ant-design/icons';
-import { Button, Space, Dropdown, Spin } from 'antd';
+import { Button, Space, Dropdown, ConfigProvider } from 'antd';
 import type { MenuProps } from 'antd';
-import type { User } from '@/types';
+import { useAuthStore } from '@/store/authStore';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useAntdLocale } from '@/hooks/useAntLocale';
 
 const defaultProps = {
   route: {
@@ -33,34 +33,11 @@ const defaultProps = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const [settings] = useState<Partial<ProSettings>>({
-    fixSiderbar: true,
-    layout: 'mix',
-    splitMenus: false,
-  });
-
-  // Load user from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('currentUser');
-    if (stored) {
-      try {
-        const user = JSON.parse(stored) as User;
-        setCurrentUser(user);
-      } catch {
-        localStorage.removeItem('currentUser');
-      }
-    }
-    setLoading(false);
-  }, []);
+  const { currentUser, logout } = useAuthStore();
+  const antdLocale = useAntdLocale();
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('currentUser');
-    setCurrentUser(null);
+    logout();
     router.push('/auth/login');
   };
 
@@ -83,89 +60,78 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     },
   ];
 
-  if (loading) {
-    return (
-      <div
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
-      >
-        <Spin size="large" />
-      </div>
-    );
-  }
-
   return (
-    <div style={{ height: '100vh', overflow: 'hidden' }}>
-      <ProLayout
-        {...defaultProps}
-        title="Admin Panel"
-        logo="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
-        location={{ pathname }}
-        layout={settings.layout}
-        splitMenus={settings.splitMenus}
-        fixSiderbar={settings.fixSiderbar}
-        siderWidth={208}
-        // Loại bỏ padding mặc định của content
-        contentStyle={{ padding: 0, margin: 0 }}
-        token={{
-          header: { colorBgMenuItemSelected: 'rgba(0,0,0,0.04)' },
-          sider: { colorMenuBackground: '#fff' },
-        }}
-        avatarProps={
-          currentUser
-            ? {
-                src: 'https://gw.alipayobjects.com/zos/antfincdn/efFD%24IOql2/weixintupian_20170331104822.jpg',
-                size: 'small',
-                title: currentUser.email || 'User',
-                render: (_, dom) => (
-                  <Dropdown menu={{ items: avatarMenu }} placement="bottomRight">
-                    {dom}
-                  </Dropdown>
-                ),
-              }
-            : {
-                render: () => (
-                  <Button
-                    type="primary"
-                    icon={<LoginOutlined />}
-                    onClick={() => router.push('/auth/login')}
-                  >
-                    Đăng nhập
-                  </Button>
-                ),
-              }
-        }
-        actionsRender={(props) => {
-          if (props.isMobile) return [];
-          return [
-            <QuestionCircleOutlined key="doc" style={{ fontSize: 16 }} />,
-            <GithubOutlined key="github" style={{ fontSize: 16 }} />,
-            <SettingOutlined key="settings" style={{ fontSize: 16 }} />,
-          ];
-        }}
-        menuItemRender={(item, dom) => (
-          <a
-            onClick={(e) => {
-              e.preventDefault();
-              router.push(item.path || '/admin');
-            }}
-            style={{ display: 'block' }}
-          >
-            {dom}
-          </a>
-        )}
-      >
-        {/* Nội dung chính - không dùng PageContainer để tránh double header & padding thừa */}
-        <div
-          style={{
-            padding: 24,
-            background: '#f5f5f5',
-            minHeight: 'calc(100vh - 64px)', // 64px = chiều cao header
-            overflow: 'auto',
+    <ConfigProvider locale={antdLocale}>
+      <div style={{ height: '100vh', overflow: 'hidden' }}>
+        <ProLayout
+          {...defaultProps}
+          title="Admin Panel"
+          logo="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
+          location={{ pathname }}
+          fixSiderbar={true}
+          layout="mix"
+          splitMenus={false}
+          siderWidth={208}
+          contentStyle={{ padding: 0, margin: 0 }}
+          token={{
+            header: { colorBgMenuItemSelected: 'rgba(0,0,0,0.04)' },
+            sider: { colorMenuBackground: '#fff' },
           }}
+          avatarProps={
+            currentUser
+              ? {
+                  src: 'https://gw.alipayobjects.com/zos/antfincdn/efFD%24IOql2/weixintupian_20170331104822.jpg',
+                  size: 'small',
+                  title: currentUser.email || 'User',
+                  render: (_, dom) => (
+                    <Dropdown menu={{ items: avatarMenu }} placement="bottomRight">
+                      {dom}
+                    </Dropdown>
+                  ),
+                }
+              : {
+                  render: () => (
+                    <Button
+                      type="primary"
+                      icon={<LoginOutlined />}
+                      onClick={() => router.push('/auth/login')}
+                    >
+                      Đăng nhập
+                    </Button>
+                  ),
+                }
+          }
+          actionsRender={(props) => {
+            if (props.isMobile) return [];
+            return [
+              <GithubOutlined key="github" style={{ fontSize: 16 }} />,
+              <LanguageSwitcher key="lang" />,
+            ];
+          }}
+          menuItemRender={(item, dom) => (
+            <a
+              onClick={(e) => {
+                e.preventDefault();
+                router.push(item.path || '/admin');
+              }}
+              style={{ display: 'block' }}
+            >
+              {dom}
+            </a>
+          )}
         >
-          {children}
-        </div>
-      </ProLayout>
-    </div>
+          <div
+            style={{
+              padding: 24,
+              background: '#f5f5f5',
+              minHeight: 'calc(100vh - 64px)',
+              overflow: 'auto',
+            }}
+          >
+            {children}
+          </div>
+        </ProLayout>
+      </div>
+    </ConfigProvider>
   );
 }

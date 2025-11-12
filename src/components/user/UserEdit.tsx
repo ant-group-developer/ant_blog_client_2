@@ -1,3 +1,4 @@
+// components/user/UserEdit.tsx
 'use client';
 
 import React, { useEffect } from 'react';
@@ -20,7 +21,6 @@ export default function UserEdit({ open, onClose, user, currentUserId, onUpdate 
 
   const isSelf = user?.id === currentUserId;
 
-  // Reset form khi modal đóng/mở hoặc user thay đổi
   useEffect(() => {
     if (open && user) {
       form.setFieldsValue({
@@ -34,19 +34,10 @@ export default function UserEdit({ open, onClose, user, currentUserId, onUpdate 
   }, [open, user, form]);
 
   const handleSave = async () => {
-    if (!user) {
-      messageApi.error('Không tìm thấy thông tin người dùng');
-      return;
-    }
-
-    if (!isSelf) {
-      messageApi.warning('Bạn chỉ có thể chỉnh sửa tài khoản của chính mình!');
-      return;
-    }
+    if (!user || !isSelf) return;
 
     try {
       const values = await form.validateFields();
-
       const payload: Partial<User> = {};
 
       if (values.email !== user.email) payload.email = values.email;
@@ -60,25 +51,11 @@ export default function UserEdit({ open, onClose, user, currentUserId, onUpdate 
       }
 
       const res = await userService.updateUser(user.id, payload);
-
-      if (res?.data) {
-        const updatedUser = res.data;
-
-        // CẬP NHẬT localStorage
-        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-
-        // PHÁT SỰ KIỆN ĐỂ CÁC COMPONENT KHÁC CẬP NHẬT NGAY
-        window.dispatchEvent(new CustomEvent('current-user-updated', { detail: updatedUser }));
-
-        // Gọi callback cho parent (nếu cần)
-        onUpdate?.(updatedUser);
-
-        messageApi.success('Cập nhật thành công!');
-        onClose();
-      }
+      onUpdate?.(res.data);
+      messageApi.success('Cập nhật thành công!');
+      onClose();
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || error.message || 'Cập nhật thất bại';
-      messageApi.error(errorMsg);
+      messageApi.error(error.response?.data?.message || 'Cập nhật thất bại');
     }
   };
 
@@ -87,6 +64,7 @@ export default function UserEdit({ open, onClose, user, currentUserId, onUpdate 
     onClose();
   };
 
+  // PHẢI CÓ RETURN
   return (
     <>
       {contextHolder}
