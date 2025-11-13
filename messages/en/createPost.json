@@ -28,9 +28,12 @@
   "requiredCategory": "Please select category!",
   "requiredThumbnail": "Please enter URL!",
   "invalidUrl": "Invalid URL!",
-
   "slugExtra": "Use lowercase, numbers, and hyphens only. Auto-generated from title.",
   "slugExtraEn": "Same as above.",
   "requiredSlug": "Please enter slug!",
-  "invalidSlug": "Slug can only contain lowercase letters, numbers, and hyphens!"
+  "invalidSlug": "Slug can only contain lowercase letters, numbers, and hyphens!",
+  "errorLoading": "Failed to load categories!",
+  "errorInvalid": "Unknown error!",
+  "noData": "No data!"
+  
 }

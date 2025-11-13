@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Card,
   Form,
@@ -14,14 +14,19 @@ import {
   Col,
   Divider,
   Typography,
-} from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, EyeOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { categoryService } from '@/service/categoryService';
-import { useCreatePost } from '@/hooks/usePosts';
-import { useAuthStore } from '@/store/authStore';
-import { Category } from '@/types';
+} from "antd";
+import {
+  ArrowLeftOutlined,
+  SaveOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
+import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { categoryService } from "@/service/categoryService";
+import { useCreatePost } from "@/hooks/usePosts";
+import { useAuthStore } from "@/store/authStore";
+import { Category } from "@/types";
+import { useTranslations } from "next-intl";
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -30,6 +35,7 @@ export default function CreatePostPage() {
   const [form] = Form.useForm();
   const router = useRouter();
   const [messageApi, contextHolder] = message.useMessage();
+  const t = useTranslations("createPost");
 
   const {
     data: categoriesData,
@@ -37,12 +43,12 @@ export default function CreatePostPage() {
     isError,
     error,
   } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ["categories"],
     queryFn: () =>
       categoryService.getCategories({
         page: 1,
         pageSize: 100,
-        keyword: '',
+        keyword: "",
       }),
     staleTime: 1000 * 60,
   });
@@ -50,14 +56,16 @@ export default function CreatePostPage() {
   const categories = categoriesData?.data || [];
 
   const createPostMutation = useCreatePost();
-  const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
 
   const { currentUser } = useAuthStore();
 
   // Hiển thị lỗi nếu không load được categories
   React.useEffect(() => {
     if (isError) {
-      messageApi.error(`Không thể tải danh mục: ${error?.message || 'Lỗi không xác định'}`);
+      messageApi.error(
+        `${t("errorLoading")} ${error?.message || t("errorInvalid")}`
+      );
     }
   }, [isError, error, messageApi]);
 
@@ -68,7 +76,7 @@ export default function CreatePostPage() {
 
   const handleSubmit = async (values: any) => {
     if (!currentUser?.id) {
-      messageApi.error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại!');
+      messageApi.error(t("loginError"));
       return;
     }
 
@@ -87,13 +95,13 @@ export default function CreatePostPage() {
       };
 
       await createPostMutation.mutateAsync(payload);
-      messageApi.success('Tạo bài viết thành công!');
+      messageApi.success(t("success"));
 
       setTimeout(() => {
-        router.push('/admin/posts');
+        router.push("/admin/posts");
       }, 1000);
     } catch (error: any) {
-      messageApi.error(error.response?.data?.message || 'Tạo bài viết thất bại!');
+      messageApi.error(error.response?.data?.message || t("error"));
     }
   };
 
@@ -101,96 +109,118 @@ export default function CreatePostPage() {
     <>
       {contextHolder}
 
-      <div style={{ minHeight: '100vh', background: '#f4f6f9', padding: '24px 16px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#f4f6f9",
+          padding: "24px 16px",
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <Card
             style={{
               borderRadius: 16,
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
-              overflow: 'hidden',
+              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+              overflow: "hidden",
             }}
             styles={{ body: { padding: 0 } }}
           >
             {/* Header */}
             <div
               style={{
-                padding: '20px 32px',
-                background: '#fff',
-                borderBottom: '1px solid #f0f0f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                padding: "20px 32px",
+                background: "#fff",
+                borderBottom: "1px solid #f0f0f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
               <Space size="middle">
                 <Button
                   icon={<ArrowLeftOutlined />}
-                  onClick={() => router.push('/admin/posts')}
+                  onClick={() => router.push("/admin/posts")}
                   type="text"
                   size="large"
                 >
-                  Quay lại
+                  {t("back")}
                 </Button>
-                <Title level={4} style={{ margin: 0, color: '#1a1a1a' }}>
-                  Tạo bài viết mới
+                <Title level={4} style={{ margin: 0, color: "#1a1a1a" }}>
+                  {t("title")}
                 </Title>
               </Space>
             </div>
 
             {/* Form Body */}
-            <div style={{ padding: '32px', maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' }}>
-              <Form form={form} layout="vertical" onFinish={handleSubmit} size="large">
+            <div
+              style={{
+                padding: "32px",
+                maxHeight: "calc(100vh - 180px)",
+                overflowY: "auto",
+              }}
+            >
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleSubmit}
+                size="large"
+              >
                 {/* === TIÊU ĐỀ & MÔ TẢ - 2 CỘT === */}
                 <Row gutter={24}>
                   {/* Tiếng Việt */}
                   <Col xs={24} lg={12}>
                     <div style={{ marginBottom: 24 }}>
                       <div
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 16,
+                        }}
                       >
                         <Text strong style={{ fontSize: 16 }}>
-                          Tiếng Việt
+                          {t("vietnamese")}
                         </Text>
-                        <span
-                          style={{
-                            background: '#ff4d4f',
-                            color: '#fff',
-                            fontSize: 11,
-                            padding: '2px 6px',
-                            borderRadius: 4,
-                          }}
-                        >
-                          BẮT BUỘC
-                        </span>
                       </div>
 
                       <Form.Item
-                        label="Tiêu đề"
+                        label={t("titleLabel")}
                         name="title_vi"
-                        rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}
+                        rules={[
+                          { required: true, message: t("requiredTitle") },
+                        ]}
                       >
-                        <Input placeholder="Nhập tiêu đề bài viết..." />
+                        <Input placeholder={t("titlePlaceholder")} />
                       </Form.Item>
 
                       <Form.Item
-                        label="Mô tả ngắn (150-200 ký tự)"
+                        label={t("descLabel")}
                         name="description_vi"
-                        rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
+                        rules={[{ required: true, message: t("requiredDesc") }]}
                       >
                         <TextArea
                           rows={3}
-                          placeholder="Tóm tắt nội dung..."
+                          placeholder={t("descPlaceholder")}
                           showCount
                           maxLength={200}
                         />
                       </Form.Item>
 
                       <Form.Item
-                        label="Nội dung chi tiết"
+                        label={t("contentLabel")}
                         name="content_vi"
-                        rules={[{ required: true, message: 'Vui lòng nhập nội dung!' }]}
+                        rules={[
+                          {
+                            required: true,
+                            message: t("requiredContent"),
+                          },
+                        ]}
                       >
-                        <TextArea rows={6} placeholder="Viết nội dung chi tiết..." showCount />
+                        <TextArea
+                          rows={6}
+                          placeholder={t("contentPlaceholder")}
+                          showCount
+                        />
                       </Form.Item>
                     </div>
                   </Col>
@@ -199,63 +229,72 @@ export default function CreatePostPage() {
                   <Col xs={24} lg={12}>
                     <div style={{ marginBottom: 24 }}>
                       <div
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 16,
+                        }}
                       >
                         <Text strong style={{ fontSize: 16 }}>
-                          English
+                          {t("english")}
                         </Text>
-                        <span
-                          style={{
-                            background: '#1890ff',
-                            color: '#fff',
-                            fontSize: 11,
-                            padding: '2px 6px',
-                            borderRadius: 4,
-                          }}
-                        >
-                          TÙY CHỌN
-                        </span>
                       </div>
 
-                      <Form.Item label="Title" name="title_en">
-                        <Input placeholder="Enter title in English..." />
+                      <Form.Item
+                        label={t("titleLabel")}
+                        name="title_en"
+                        rules={[
+                          { required: true, message: t("requiredTitle") },
+                        ]}
+                      >
+                        {" "}
+                        <Input placeholder={t("titlePlaceholder")} />
                       </Form.Item>
 
-                      <Form.Item label="Short Description" name="description_en">
+                      <Form.Item
+                        label={t("contentLabel")}
+                        name="content_en"
+                        rules={[
+                          {
+                            required: true,
+                            message: t("requiredContent"),
+                          },
+                        ]}
+                      >
                         <TextArea
-                          rows={3}
-                          placeholder="Brief summary..."
+                          rows={6}
+                          placeholder={t("contentPlaceholder")}
                           showCount
-                          maxLength={200}
                         />
-                      </Form.Item>
-
-                      <Form.Item label="Content" name="content_en">
-                        <TextArea rows={6} placeholder="Write detailed content..." showCount />
                       </Form.Item>
                     </div>
                   </Col>
                 </Row>
 
-                <Divider style={{ margin: '32px 0' }} />
+                <Divider style={{ margin: "32px 0" }} />
                 <Form.Item label="Slug" name="slug">
-                  <Input placeholder="Nhập Slug..." />
+                  <Input placeholder={t("requiredSlug")} />
                 </Form.Item>
 
                 {/* === DANH MỤC & THUMBNAIL === */}
                 <Row gutter={24}>
                   <Col xs={24} md={12}>
                     <Form.Item
-                      label="Danh mục"
+                      label={t("categoryLabel")}
                       name="category_id"
-                      rules={[{ required: true, message: 'Vui lòng chọn danh mục!' }]}
+                      rules={[
+                        { required: true, message: t("requiredCategory") },
+                      ]}
                     >
                       <Select
                         loading={loadingCats}
-                        placeholder="Chọn danh mục..."
+                        placeholder={t("categoryPlaceholder")}
                         showSearch
                         optionFilterProp="children"
-                        notFoundContent={isError ? 'Lỗi tải danh mục' : 'Không có dữ liệu'}
+                        notFoundContent={
+                          isError ? t("errorLoading") : t("noData")
+                        }
                       >
                         {categories.map((cat: Category) => (
                           <Select.Option key={cat.id} value={cat.id}>
@@ -268,19 +307,19 @@ export default function CreatePostPage() {
 
                   <Col xs={24} md={12}>
                     <Form.Item
-                      label="Thumbnail URL"
+                      label={t("thumbnailLabel")}
                       name="thumbnail"
                       rules={[
-                        { required: true, message: 'Vui lòng nhập URL!' },
-                        { type: 'url', message: 'URL không hợp lệ!' },
+                        { required: true, message: t("requiredThumbnail") },
+                        { type: "url", message: t("invalidUrl") },
                       ]}
-                      extra="Khuyến nghị: 1200x630px"
+                      extra={t("thumbnailExtra")}
                     >
-                      <Space.Compact style={{ width: '100%' }}>
+                      <Space.Compact style={{ width: "100%" }}>
                         <Input
                           placeholder="https://example.com/image.jpg"
                           onChange={handleThumbnailChange}
-                          suffix={<EyeOutlined style={{ color: '#aaa' }} />}
+                          suffix={<EyeOutlined style={{ color: "#aaa" }} />}
                         />
                       </Space.Compact>
                     </Form.Item>
@@ -289,39 +328,39 @@ export default function CreatePostPage() {
 
                 {/* Preview */}
                 {thumbnailPreview && (
-                  <div style={{ marginTop: 16, textAlign: 'center' }}>
-                    <Text strong>Preview:</Text>
+                  <div style={{ marginTop: 16, textAlign: "center" }}>
+                    <Text strong>{t("preview")}</Text>
                     <div
                       style={{
                         marginTop: 8,
-                        display: 'inline-block',
+                        display: "inline-block",
                         borderRadius: 12,
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        overflow: "hidden",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                       }}
                     >
                       <Image
                         src={thumbnailPreview}
                         alt="Preview"
                         width={400}
-                        style={{ display: 'block', objectFit: 'cover' }}
+                        style={{ display: "block", objectFit: "cover" }}
                         fallback="https://via.placeholder.com/1200x630/eeeeee/999999?text=No+Image"
                       />
                     </div>
                   </div>
                 )}
 
-                <Divider style={{ margin: '32px 0 24px' }} />
+                <Divider style={{ margin: "32px 0 24px" }} />
 
                 {/* === NÚT HÀNH ĐỘNG === */}
-                <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+                <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
                   <Space size="middle">
                     <Button
                       size="large"
-                      onClick={() => router.push('/admin/posts')}
+                      onClick={() => router.push("/admin/posts")}
                       disabled={createPostMutation.isPending}
                     >
-                      Hủy
+                      {t("cancel")}
                     </Button>
                     <Button
                       type="primary"
@@ -331,7 +370,7 @@ export default function CreatePostPage() {
                       loading={createPostMutation.isPending}
                       style={{ minWidth: 140 }}
                     >
-                      Tạo bài viết
+                      {t("submit")}
                     </Button>
                   </Space>
                 </Form.Item>

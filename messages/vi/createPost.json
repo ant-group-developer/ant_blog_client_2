@@ -31,5 +31,8 @@
   "slugExtra": "Chỉ dùng chữ thường, số và dấu gạch ngang. Tự động sinh từ tiêu đề.",
   "slugExtraEn": "Lowercase, numbers, hyphens only. Auto-generated from title.",
   "requiredSlug": "Vui lòng nhập slug!",
-  "invalidSlug": "Slug chỉ chứa chữ thường, số và dấu gạch ngang!"
+  "invalidSlug": "Slug chỉ chứa chữ thường, số và dấu gạch ngang!",
+  "errorLoading": "Không thể tải danh mục!",
+  "errorInvalid": "Lỗi không xác định!",
+  "noData": "Không có dữ liệu!"
 }

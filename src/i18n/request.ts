@@ -14,8 +14,10 @@ export default getRequestConfig(async () => {
   const edit = (await import(`../../messages/${locale}/edit.json`)).default;
   const auth = (await import(`../../messages/${locale}/auth.json`)).default;
   const home = (await import(`../../messages/${locale}/home.json`)).default;
+  const categoryList = (await import(`../../messages/${locale}/categoryList.json`)).default;
+  const postList = (await import(`../../messages/${locale}/postList.json`)).default;
   return {
     locale,
-    messages: { edit, createPost, layoutPost, post, detailPost, layoutAdmin, userList, auth, home },
+    messages: { edit,postList, categoryList, createPost, layoutPost, post, detailPost, layoutAdmin, userList, auth, home },
   };
 });
