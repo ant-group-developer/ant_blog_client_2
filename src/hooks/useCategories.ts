@@ -13,7 +13,10 @@ export const useCategories = (params: GetCategoriesParams = {}) => {
     queryKey: ['categories', params.page, params.pageSize, params.keyword],
     queryFn: async () => {
       const res = await categoryService.getCategories(params);
-      return res.data || []; // Trả về mảng trực tiếp
+      return {
+        data: res.data || [],
+        total: res.pagination?.totalItem || 0,
+      };
     },
     staleTime: 1000 * 60,
   });

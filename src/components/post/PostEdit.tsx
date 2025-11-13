@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, message } from 'antd';
 import { EditOutlined, LinkOutlined } from '@ant-design/icons';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { Post } from '@/types';
 import { useUpdatePost } from '@/hooks/usePosts'; // Dùng hook mutation
 
@@ -20,11 +20,10 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
   const locale = useLocale();
+  const t = useTranslations('edit');
 
-  // Dùng hook mutation
   const updateMutation = useUpdatePost();
 
-  // Cập nhật form khi mở modal
   useEffect(() => {
     if (open && post) {
       form.setFieldsValue({
@@ -45,7 +44,6 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
     try {
       const values = await form.validateFields();
 
-      // Tạo payload chỉ với các field thay đổi
       const payload: Partial<Post> = {};
       const keys = [
         'title_vi',
@@ -67,13 +65,12 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
 
       payload.category_id = post.category_id;
 
-      // Nếu không có thay đổi nào (ngoại trừ category_id)
       const hasChanges = Object.keys(payload).some(
         (k) => k !== 'category_id' && payload[k as keyof Post] !== undefined
       );
 
       if (!hasChanges) {
-        messageApi.info(locale === 'vi' ? 'Không có thay đổi nào' : 'No changes detected');
+        messageApi.info(t('noChange'));
         onClose();
         return;
       }
@@ -84,12 +81,11 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
         payload,
       });
 
-      messageApi.success(locale === 'vi' ? 'Cập nhật thành công!' : 'Updated successfully!');
+      messageApi.success(t('updateSuccess'));
       onUpdate?.({ ...post, ...payload });
       onClose();
     } catch (err: any) {
-      const errorMsg =
-        err?.response?.data?.message || (locale === 'vi' ? 'Cập nhật thất bại' : 'Update failed');
+      const errorMsg = err?.response?.data?.message || t('updateFailed');
       messageApi.error(errorMsg);
     }
   };
@@ -100,34 +96,30 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
     <>
       {contextHolder}
       <Modal
-        title={locale === 'vi' ? 'Chỉnh sửa bài viết' : 'Edit Post'}
+        title={t('modalTitlePost')}
         open={open}
         onCancel={onClose}
         onOk={handleSave}
-        okText={locale === 'vi' ? 'Lưu thay đổi' : 'Save Changes'}
-        cancelText={locale === 'vi' ? 'Hủy' : 'Cancel'}
+        okText={t('okText')}
+        cancelText={t('cancelText')}
         width={900}
         confirmLoading={isLoading}
         okButtonProps={{ disabled: isLoading }}
         destroyOnHidden
+        forceRender
         afterOpenChange={(isOpen) => {
           if (!isOpen) form.resetFields();
         }}
       >
         <Form form={form} layout="vertical" autoComplete="off" disabled={isLoading}>
-          {/* --- TIẾNG VIỆT --- */}
           <div style={{ background: '#f9f9f9', padding: 16, borderRadius: 8, marginBottom: 16 }}>
-            <strong style={{ color: '#d4380d' }}>
-              {locale === 'vi' ? 'Tiếng Việt (bắt buộc)' : 'Vietnamese (required)'}
-            </strong>
-
             <Form.Item
-              label={locale === 'vi' ? 'Tiêu đề' : 'Title'}
+              label={t('post.title_vi')}
               name="title_vi"
               rules={[
                 {
                   required: true,
-                  message: locale === 'vi' ? 'Vui lòng nhập tiêu đề!' : 'Please enter title!',
+                  message: t('post.validated'),
                 },
               ]}
             >
@@ -135,12 +127,12 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
             </Form.Item>
 
             <Form.Item
-              label={locale === 'vi' ? 'Mô tả ngắn' : 'Short Description'}
+              label={t('post.description_vi')}
               name="description_vi"
               rules={[
                 {
                   required: true,
-                  message: locale === 'vi' ? 'Vui lòng nhập mô tả!' : 'Please enter description!',
+                  message: t('post.validated'),
                 },
               ]}
             >
@@ -148,12 +140,12 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
             </Form.Item>
 
             <Form.Item
-              label={locale === 'vi' ? 'Nội dung' : 'Content'}
+              label={t('post.content_vi')}
               name="content_vi"
               rules={[
                 {
                   required: true,
-                  message: locale === 'vi' ? 'Vui lòng nhập nội dung!' : 'Please enter content!',
+                  message: t('post.validated'),
                 },
               ]}
             >
@@ -163,34 +155,54 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
 
           {/* --- TIẾNG ANH --- */}
           <div style={{ background: '#e6f7ff', padding: 16, borderRadius: 8, marginBottom: 16 }}>
-            <strong style={{ color: '#1890ff' }}>
-              {locale === 'vi' ? 'Tiếng Anh (tùy chọn)' : 'English (optional)'}
-            </strong>
-
-            <Form.Item label={locale === 'vi' ? 'Tiêu đề' : 'Title'} name="title_en">
+            <Form.Item
+              label={t('post.title_en')}
+              name="title_en"
+              rules={[
+                {
+                  required: true,
+                  message: t('post.validated'),
+                },
+              ]}
+            >
               <Input prefix={<EditOutlined />} placeholder="Optional" />
             </Form.Item>
 
             <Form.Item
-              label={locale === 'vi' ? 'Mô tả ngắn' : 'Short Description'}
+              label={t('post.description_en')}
               name="description_en"
+              rules={[
+                {
+                  required: true,
+                  message: t('post.validated'),
+                },
+              ]}
             >
               <TextArea rows={2} placeholder="Optional" />
             </Form.Item>
 
-            <Form.Item label={locale === 'vi' ? 'Nội dung' : 'Content'} name="content_en">
+            <Form.Item
+              label={t('post.content_en')}
+              name="content_en"
+              rules={[
+                {
+                  required: true,
+                  message: t('post.validated'),
+                },
+              ]}
+            >
               <TextArea rows={6} placeholder="Optional" />
             </Form.Item>
           </div>
 
           {/* --- THUMBNAIL --- */}
           <Form.Item
-            label="Thumbnail URL"
+            label={t('post.thumbnail')}
             name="thumbnail"
             rules={[
               {
                 required: true,
-                message: locale === 'vi' ? 'Vui lòng nhập URL ảnh!' : 'Please enter image URL!',
+                message: t('post.validated'),
               },
             ]}
           >

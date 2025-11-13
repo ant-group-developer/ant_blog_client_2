@@ -4,29 +4,32 @@ import React from 'react';
 import { Form, Input, Button, Card, Typography, Divider, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { userService } from '@/service/userService';
+import { useTranslations } from 'next-intl';
 
 const { Title, Text, Link } = Typography;
 
 export default function RegisterForm() {
+  const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
+  const t = useTranslations('auth');
 
   const handleRegister = async (values: { email: string; password: string }) => {
     try {
       const res = await userService.createUser(values);
 
       if (res.message?.includes('exist')) {
-        messageApi.error('Email đã tồn tại!');
+        messageApi.error(t('register.emailExist'));
         return;
       }
 
-      messageApi.success('Đăng ký thành công!');
+      messageApi.success(t('register.successMessage'));
 
       setTimeout(() => {
         window.location.href = '/auth/login';
       }, 800);
     } catch (error: any) {
       console.error(error);
-      messageApi.error(error?.message || 'Đăng ký thất bại!');
+      messageApi.error(error?.message || t('register.errorMessage'));
     }
   };
 
@@ -49,22 +52,28 @@ export default function RegisterForm() {
           borderRadius: 8,
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         }}
-        bodyStyle={{ padding: 32 }}
+        styles={{ body: { padding: 32 } }}
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <Title level={3} style={{ margin: 0 }}>
-            Đăng ký
+            {t('register.title')}
           </Title>
-          <Text type="secondary">Nhập email và mật khẩu để tạo tài khoản</Text>
+          <Text type="secondary">{t('register.subtitle')}</Text>
         </div>
 
-        <Form name="register" layout="vertical" onFinish={handleRegister} autoComplete="off">
+        <Form
+          form={form}
+          name="register"
+          layout="vertical"
+          onFinish={handleRegister}
+          autoComplete="off"
+        >
           <Form.Item
             name="email"
-            label="Email"
+            label={t('register.emailLabel')}
             rules={[
-              { required: true, message: 'Vui lòng nhập email!' },
-              { type: 'email', message: 'Email không hợp lệ!' },
+              { required: true, message: t('login.emailRequired') },
+              { type: 'email', message: t('login.emailInvalid') },
             ]}
           >
             <Input prefix={<UserOutlined />} placeholder="user@example.com" size="large" />
@@ -72,26 +81,30 @@ export default function RegisterForm() {
 
           <Form.Item
             name="password"
-            label="Mật khẩu"
+            label={t('register.passwordLabel')}
             rules={[
-              { required: true, message: 'Vui lòng nhập mật khẩu!' },
-              { min: 6, message: 'Mật khẩu ít nhất 6 ký tự!' },
+              { required: true, message: t('login.passwordRequired') },
+              { min: 6, message: t('login.passwordInvalid') },
             ]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="Mật khẩu" size="large" />
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder={t('register.passwordLabel')}
+              size="large"
+            />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block size="large">
-              Đăng ký
+              {t('register.registerButton')}
             </Button>
           </Form.Item>
 
-          <Divider plain>Hoặc</Divider>
-
           <div style={{ textAlign: 'center' }}>
-            <Text>Đã có tài khoản? </Text>
-            <Link onClick={() => (window.location.href = '/auth/login')}>Đăng nhập</Link>
+            <Text>{t('register.haveAccount')} </Text>
+            <Link onClick={() => (window.location.href = '/auth/login')}>
+              {t('register.loginLink')}
+            </Link>
           </div>
         </Form>
       </Card>

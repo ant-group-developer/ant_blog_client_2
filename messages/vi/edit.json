@@ -1,0 +1,44 @@
+{
+  "okText": "Lưu thay đổi",
+  "cancelText": "Hủy",
+  "updateSuccess": "Cập nhật thành công!",
+  "updateFailed": "Cập nhật thất bại",
+  "noChange": "Không có thay đổi nào",
+
+  "modalTitleUser": "Chỉnh sửa thông tin cá nhân",
+  "modalTitlePost": "Chỉnh sửa bài viết",
+  "modalTitleCategory": "Chỉnh sửa danh mục",
+
+  "user": {
+    "email": "Email",
+    "enterEmail": "Vui lòng nhập email!",
+    "validatedEmail": "Vui lòng nhập email hợp lệ!",
+    "password": "Mật khẩu mới",
+    "validated": "Mật khẩu ít nhất 6 ký tự!",
+    "passwordExtra": "Để trống nếu không muốn thay đổi",
+    "status": "Trạng thái",
+    "online": "Online",
+    "offline": "Offline",
+    "noData": "Không có thông tin người dùng"
+  },
+
+  "post": {
+    "title_vi": "Tiêu đề (Tiếng Việt)",
+    "validated": "vui lòng hoàn thiện các trường bắt buộc!",
+    "description_vi": "Mô tả ngắn (Tiếng Việt)",
+    "content_vi": "Nội dung (Tiếng Việt)",
+    "title_en": "Tiêu đề (Tiếng Anh)",
+    "description_en": "Mô tả ngắn (Tiếng Anh)",
+    "content_en": "Nội dung (Tiếng Anh)",
+    "thumbnail": "Thumbnail URL",
+    "required": "(bắt buộc)",
+    "optional": "(tùy chọn)"
+  },
+
+  "category": {
+    "validated": "vui lòng hoàn thiện các trường bắt buộc!",
+    "name_vi": "Tên (Tiếng Việt)",
+    "name_en": "Tên (Tiếng Anh)",
+    "slug": "Slug"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "title": "MyBlog",
+  "home": "Home",
+  "admin": "Admin",
+  "about": "About",
+  "contact": "Contact",
+  "postsTitle": "Posts",
+  "login": "Login",
+  "logout": "Logout",
+  "logoutSuccess": "Logout successfully!"
+}

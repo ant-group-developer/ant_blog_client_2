@@ -2,10 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { ProTable, TableDropdown, type ProColumns } from '@ant-design/pro-components';
-import { Avatar, message, Space, Image, Tag, Button, Input } from 'antd';
-import { EditOutlined, FileTextOutlined, PictureOutlined, PlusOutlined } from '@ant-design/icons';
-import { usePosts, useUpdatePost } from '@/hooks/usePosts';
+import { ProTable, type ProColumns } from '@ant-design/pro-components';
+import { Avatar, message, Space, Image, Tag, Button, Input, Popconfirm } from 'antd';
+import { EditOutlined, PictureOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { usePosts, useUpdatePost, useDeletePost } from '@/hooks/usePosts';
 import { useAuthStore } from '@/store/authStore';
 import PostEdit from '@/components/post/PostEdit';
 import { Post } from '@/types';
@@ -18,7 +18,7 @@ export default function PostListPage() {
   const router = useRouter();
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
-  const locale = useLocale(); // 'vi' | 'en'
+  const locale = useLocale();
   const { currentUser } = useAuthStore();
 
   const [params, setParams] = useState({
@@ -29,6 +29,7 @@ export default function PostListPage() {
 
   const { data, isLoading } = usePosts(params);
   const updateMutation = useUpdatePost();
+  const deleteMutation = useDeletePost();
 
   const handleUpdate = (post: Post) => {
     updateMutation.mutate(
@@ -47,11 +48,27 @@ export default function PostListPage() {
     );
   };
 
+  const handleDelete = (post: Post) => {
+    deleteMutation.mutate(post.id, {
+      onSuccess: () => {
+        messageApi.success(
+          locale === 'vi' ? 'Xóa bài viết thành công!' : 'Post deleted successfully!'
+        );
+        setParams((p) => ({ ...p })); // trigger refetch
+      },
+      onError: (err: any) => {
+        messageApi.error(
+          err.response?.data?.message || (locale === 'vi' ? 'Xóa thất bại' : 'Delete failed')
+        );
+      },
+    });
+  };
+
   const columns: ProColumns<Post>[] = [
     {
       title: 'ID',
       dataIndex: 'id',
-      width: 100,
+      width: 80,
       search: false,
       render: (id) => (
         <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{String(id).slice(0, 8)}...</span>
@@ -60,12 +77,11 @@ export default function PostListPage() {
     {
       title: locale === 'vi' ? 'Bài viết' : 'Post',
       dataIndex: 'title_vi',
-      fieldProps: { placeholder: locale === 'vi' ? 'Tìm theo tiêu đề...' : 'Search by title...' },
+      width: 320,
       render: (_, record) => {
         const title = locale === 'vi' ? record.title_vi : record.title_en || record.title_vi;
         const description =
           locale === 'vi' ? record.description_vi : record.description_en || record.description_vi;
-
         return (
           <Space>
             {record.thumbnail ? (
@@ -79,18 +95,28 @@ export default function PostListPage() {
             ) : (
               <Avatar size={40} icon={<PictureOutlined />} />
             )}
-            <div style={{ maxWidth: 300 }}>
-              <div>
-                <strong>{title}</strong>
-                {currentUser?.id === record.creator_id && (
-                  <Tag color="blue" style={{ marginLeft: 8 }}>
-                    {locale === 'vi' ? 'Bạn' : 'You'}
-                  </Tag>
-                )}
+            <div style={{ maxWidth: 260 }}>
+              <div
+                style={{
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {title}
               </div>
               {description && (
-                <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
-                  {description.slice(0, 50)}...
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#aaa',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {description}
                 </div>
               )}
             </div>
@@ -121,23 +147,39 @@ export default function PostListPage() {
     {
       title: locale === 'vi' ? 'Hành động' : 'Actions',
       key: 'action',
-      width: 80,
+      width: 140,
       fixed: 'right',
       search: false,
       render: (_, record) => {
         const isOwner = currentUser?.id === record.creator_id;
         return (
-          <TableDropdown
-            menus={[
-              {
-                key: 'edit',
-                name: locale === 'vi' ? 'Sửa' : 'Edit',
-                icon: <EditOutlined />,
-                onClick: () => setEditingPost(record),
-                disabled: !isOwner,
-              },
-            ]}
-          />
+          <Space size="small">
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => setEditingPost(record)}
+              disabled={!isOwner}
+            >
+              {locale === 'vi' ? 'Sửa' : 'Edit'}
+            </Button>
+            <Popconfirm
+              title={locale === 'vi' ? 'Xóa bài viết?' : 'Delete post?'}
+              description={
+                locale === 'vi'
+                  ? `Bạn có chắc muốn xóa "${record.title_vi}"?`
+                  : `Are you sure to delete "${record.title_en || record.title_vi}"?`
+              }
+              onConfirm={() => handleDelete(record)}
+              okText={locale === 'vi' ? 'Xóa' : 'Delete'}
+              cancelText={locale === 'vi' ? 'Hủy' : 'Cancel'}
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="link" size="small" danger icon={<DeleteOutlined />} disabled={!isOwner}>
+                {locale === 'vi' ? 'Xóa' : 'Delete'}
+              </Button>
+            </Popconfirm>
+          </Space>
         );
       },
     },
@@ -147,8 +189,8 @@ export default function PostListPage() {
     <>
       {contextHolder}
       <PageContainer
-        title="Quản lý bài viết"
-        breadcrumb={undefined} // ← xóa span Dashboard / Post
+        title={locale === 'vi' ? 'Quản lý bài viết' : 'Post Management'}
+        breadcrumb={undefined}
         content={
           <div
             style={{
@@ -158,15 +200,26 @@ export default function PostListPage() {
               marginTop: 16,
             }}
           >
-            <Search
-              placeholder="Tìm kiếm bài viết..."
-              onSearch={(value) => {
-                setParams((prev) => ({ ...prev, keyword: value, page: 1 }));
-              }}
-              allowClear
-              enterButton
-              style={{ width: 320 }}
-            />
+            <Space.Compact style={{ width: 320 }}>
+              <Input
+                placeholder={locale === 'vi' ? 'Tìm kiếm bài viết...' : 'Search posts...'}
+                allowClear
+                onPressEnter={(e) => {
+                  const value = (e.target as HTMLInputElement).value;
+                  setParams((p) => ({ ...p, keyword: value, page: 1 }));
+                }}
+              />
+              <Button
+                type="primary"
+                onClick={() => {
+                  const input = document.querySelector<HTMLInputElement>('.ant-input')!;
+                  setParams((p) => ({ ...p, keyword: input.value, page: 1 }));
+                }}
+              >
+                {locale === 'vi' ? 'Tìm kiếm' : 'Search'}
+              </Button>
+            </Space.Compact>
+
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -182,7 +235,7 @@ export default function PostListPage() {
             columns={columns}
             rowKey="id"
             dataSource={data?.data}
-            loading={isLoading}
+            loading={isLoading || deleteMutation.isPending}
             pagination={{
               total: data?.total,
               current: params.page,
@@ -192,10 +245,6 @@ export default function PostListPage() {
               pageSizeOptions: ['10', '20', '50'],
               onChange: (page, pageSize) => setParams((p) => ({ ...p, page, pageSize })),
             }}
-            onSubmit={(values: { title_vi?: string }) =>
-              setParams((p) => ({ ...p, keyword: values.title_vi || '', page: 1 }))
-            }
-            onReset={() => setParams((p) => ({ ...p, keyword: '', page: 1 }))}
             toolBarRender={false}
             search={false}
             scroll={{ x: 1200 }}

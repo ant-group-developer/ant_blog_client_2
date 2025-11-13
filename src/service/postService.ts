@@ -17,6 +17,10 @@ export const postService = {
     const { data } = await api.post(`/posts`, payload);
     return data;
   },
+  async getPostById(postId: string | number) {
+    const { data } = await api.get(`/posts/${postId}`);
+    return data;
+  },
 
   async updatePost(postId: string | number, payload: Partial<Post>) {
     const { data } = await api.patch(`/posts/${postId}`, payload);

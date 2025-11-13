@@ -126,7 +126,9 @@ export default function CreateCategoryPage() {
                     name="order"
                     rules={[{ required: true, message: 'Vui lòng nhập thứ tự!' }]}
                   >
-                    <InputNumber size="large" min={1} style={{ width: '100%' }} />
+                    <Space.Compact style={{ width: '100%' }}>
+                      <InputNumber controls size="large" min={1} style={{ width: '100%' }} />
+                    </Space.Compact>
                   </Form.Item>
                 </div>
 

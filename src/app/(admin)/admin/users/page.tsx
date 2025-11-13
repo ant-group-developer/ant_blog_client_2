@@ -7,13 +7,13 @@ import {
   type ProColumns,
   PageContainer,
 } from '@ant-design/pro-components';
-import { Tag, Avatar, message, Space, Input } from 'antd';
+import { Tag, Avatar, message, Space, Input, Button } from 'antd';
 import { EditOutlined, UserOutlined } from '@ant-design/icons';
 import { useUsers, useUpdateUser } from '@/hooks/useUsers';
 import { useAuthStore } from '@/store/authStore';
 import UserEdit from '@/components/user/UserEdit';
 import { User } from '@/types';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 const { Search } = Input;
 
@@ -23,6 +23,7 @@ export default function UserListPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
   const locale = useLocale(); // 'vi' | 'en'
+  const t = useTranslations('userList');
 
   const [params, setParams] = useState({
     page: 1,
@@ -38,13 +39,11 @@ export default function UserListPage() {
       { id: user.id, payload: user },
       {
         onSuccess: () => {
-          messageApi.success(locale === 'vi' ? 'Cập nhật thành công!' : 'Updated successfully!');
+          messageApi.success(t('updateSuccess'));
           setEditingUser(null);
         },
         onError: (err: any) => {
-          messageApi.error(
-            err.response?.data?.message || (locale === 'vi' ? 'Cập nhật thất bại' : 'Update failed')
-          );
+          messageApi.error(err.response?.data?.message || t('updateFailed'));
         },
       }
     );
@@ -52,17 +51,20 @@ export default function UserListPage() {
 
   const columns: ProColumns<User>[] = [
     {
-      title: 'ID',
+      title: t('id'),
       dataIndex: 'id',
-      width: 100,
+      width: 100, // nhỏ gọn, vì ID ngắn
+      fixed: 'left',
       search: false,
       render: (id) => (
         <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{String(id).slice(0, 8)}...</span>
       ),
     },
     {
-      title: locale === 'vi' ? 'Email' : 'Email',
+      title: t('email'),
       dataIndex: 'email',
+      width: 300, // tăng một chút để email hiển thị đầy đủ
+      ellipsis: true, // nếu dài quá thì hiển thị ...
       search: false,
       render: (_, record) => (
         <Space>
@@ -70,33 +72,25 @@ export default function UserListPage() {
           <strong>{record.email}</strong>
           {currentUser?.id === record.id && (
             <Tag color="blue" style={{ marginLeft: 8 }}>
-              {locale === 'vi' ? 'Bạn' : 'You'}
+              {t('you')}
             </Tag>
           )}
         </Space>
       ),
     },
     {
-      title: locale === 'vi' ? 'Trạng thái' : 'Status',
+      title: t('status'),
       dataIndex: 'status',
-      width: 140,
+      width: 120, // vừa phải
       search: false,
       render: (status) => (
-        <Tag color={status ? 'green' : 'red'}>
-          {status
-            ? locale === 'vi'
-              ? 'Online'
-              : 'Online'
-            : locale === 'vi'
-            ? 'Offline'
-            : 'Offline'}
-        </Tag>
+        <Tag color={status ? 'green' : 'red'}>{status ? t('online') : t('offline')}</Tag>
       ),
     },
     {
-      title: locale === 'vi' ? 'Tạo lúc' : 'Created At',
+      title: t('createdAt'),
       dataIndex: 'created_at',
-      width: 160,
+      width: 160, // vừa đủ hiển thị ngày giờ
       search: false,
       render: (_, record) =>
         record.created_at
@@ -104,9 +98,9 @@ export default function UserListPage() {
           : '-',
     },
     {
-      title: locale === 'vi' ? 'Cập nhật lúc' : 'Updated At',
+      title: t('updatedAt'),
       dataIndex: 'updated_at',
-      width: 160,
+      width: 160, // vừa đủ
       search: false,
       render: (_, record) =>
         record.updated_at
@@ -114,9 +108,9 @@ export default function UserListPage() {
           : '-',
     },
     {
-      title: locale === 'vi' ? 'Hành động' : 'Actions',
+      title: t('actions'),
       key: 'action',
-      width: 80,
+      width: 100, // rộng đủ để click menu dropdown
       fixed: 'right',
       search: false,
       render: (_, record) => {
@@ -126,7 +120,7 @@ export default function UserListPage() {
             menus={[
               {
                 key: 'edit',
-                name: locale === 'vi' ? 'Sửa' : 'Edit',
+                name: t('edit'),
                 icon: <EditOutlined />,
                 onClick: () => setEditingUser(record),
                 disabled: !isMe,
@@ -142,7 +136,7 @@ export default function UserListPage() {
     <>
       {contextHolder}
       <PageContainer
-        title={locale === 'vi' ? 'Quản lý người dùng' : 'User Management'}
+        title={t('pageTitle')}
         breadcrumb={undefined}
         content={
           <div
@@ -153,19 +147,43 @@ export default function UserListPage() {
               marginTop: 16,
             }}
           >
-            <Search
-              placeholder={locale === 'vi' ? 'Tìm kiếm người dùng...' : 'Search users...'}
-              onSearch={(value) => {
-                setParams((prev) => ({ ...prev, keyword: value, page: 1 }));
-              }}
-              allowClear
-              enterButton
-              style={{ width: 320 }}
-            />
+            <Space.Compact style={{ width: 320 }}>
+              <Input
+                placeholder={t('searchPlaceholder')}
+                allowClear
+                onPressEnter={(e) =>
+                  setParams((prev) => ({
+                    ...prev,
+                    keyword: (e.target as HTMLInputElement).value,
+                    page: 1,
+                  }))
+                }
+                size="middle"
+              />
+              <Button
+                type="primary"
+                onClick={() => {
+                  const input = document.querySelector<HTMLInputElement>('.ant-input')!;
+                  setParams((prev) => ({ ...prev, keyword: input.value, page: 1 }));
+                }}
+              >
+                {t('search')}
+              </Button>
+            </Space.Compact>
           </div>
         }
       >
-        <div style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
+        <div
+          style={{
+            background: '#fff',
+            padding: 24,
+            borderRadius: 8,
+            height: 'calc(100vh - 240px)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
           <ProTable<User>
             columns={columns}
             rowKey="id"
@@ -182,7 +200,20 @@ export default function UserListPage() {
             }}
             toolBarRender={false}
             search={false}
-            scroll={{ x: 1200 }}
+            scroll={{
+              x: 1200,
+              y: 'calc(100vh - 400px)',
+            }}
+            sticky={{
+              offsetHeader: 0,
+            }}
+            style={{
+              height: '100%',
+              overflow: 'hidden',
+            }}
+            tableStyle={{
+              height: '100%',
+            }}
           />
         </div>
       </PageContainer>

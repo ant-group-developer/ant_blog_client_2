@@ -1,92 +1,84 @@
+// app/(public)/posts/page.tsx
 'use client';
 
-import { Card, Typography, Space, Tag, Divider } from 'antd';
-import { useTranslations, useLocale } from 'next-intl';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { GlobalOutlined, TranslationOutlined } from '@ant-design/icons';
+import React, { use } from 'react';
+import { Button, Typography } from 'antd';
+import { ArrowRightOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
+import { PageContainer } from '@ant-design/pro-components';
+import { useTranslations } from 'next-intl';
+const { Title, Paragraph } = Typography;
 
-const { Title, Paragraph, Text } = Typography;
-
-export default function HomePage() {
+export default function PostLandingPage() {
+  const router = useRouter();
   const t = useTranslations('home');
-  const locale = useLocale();
+  const handleExplore = () => {
+    router.push('/posts');
+  };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        padding: '40px 20px',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      }}
+    <PageContainer
+      header={{ title: false }}
+      className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center"
+      style={{ padding: 0 }}
     >
-      <div style={{ maxWidth: 700, margin: '0 auto' }}>
-        {/* Card chính */}
-        <Card
-          hoverable
-          style={{
-            borderRadius: 16,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-            overflow: 'hidden',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-          }}
-        >
-          {/* Header: Icon + Title */}
-          <Space direction="vertical" size="middle" style={{ width: '100%', textAlign: 'center' }}>
-            <div style={{ fontSize: 48, color: '#1677ff' }}>
-              <TranslationOutlined />
-            </div>
+      {/* Nền trang trí */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div
+          className="absolute top-0 left-0 w-96 h-96 bg-purple-300 rounded-full blur-3xl opacity-30"
+          style={{ transform: 'translate(-50%, -50%)' }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-96 h-96 bg-pink-300 rounded-full blur-3xl opacity-30"
+          style={{ transform: 'translate(50%, 50%)' }}
+        />
+      </div>
 
-            <Title level={1} style={{ margin: 0, fontWeight: 700, color: '#1a1a1a' }}>
-              {t('title')}
-            </Title>
+      <div className="flex flex-col items-center justify-center w-full px-6 md:px-12 lg:px-20">
+        <div className="w-full max-w-3xl text-center space-y-8 mx-auto">
+          {/* Tiêu đề */}
+          <Title
+            level={1}
+            className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight"
+            style={{
+              background: 'linear-gradient(to right, #6366f1, #a855f7)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            {t('title')}
+          </Title>
 
-            <Paragraph
-              style={{
-                fontSize: 17,
-                color: '#595959',
-                maxWidth: 600,
-                margin: '16px auto 0',
-                lineHeight: 1.7,
-              }}
-            >
-              {t('description')}
+          {/* Mô tả */}
+          <div className="space-y-5 max-w-4xl mx-auto">
+            <Paragraph className="text-lg md:text-xl lg:text-2xl text-gray-700 leading-relaxed">
+              {t('subtitle')}
             </Paragraph>
-          </Space>
-
-          <Divider style={{ margin: '32px 0', borderColor: '#f0f0f0' }} />
-
-          {/* Language Switcher */}
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <LanguageSwitcher />
+            <Paragraph className="text-lg md:text-xl lg:text-2xl text-gray-700 leading-relaxed font-medium">
+              {t('subtitle_1')}
+            </Paragraph>
+            <Paragraph className="text-lg md:text-xl lg:text-2xl text-indigo-600 font-bold leading-relaxed">
+              {t('subtitle_2')}
+            </Paragraph>
           </div>
 
-          {/* Footer Info */}
-          <Space direction="vertical" size="small" style={{ width: '100%', textAlign: 'center' }}>
-            <Text type="secondary" style={{ fontSize: 14 }}>
-              <GlobalOutlined style={{ marginRight: 6 }} />
-              Ngôn ngữ hiện tại:{' '}
-              <Tag color={locale === 'vi' ? 'volcano' : 'geekblue'} style={{ marginLeft: 4 }}>
-                {locale.toUpperCase()}
-              </Tag>
-            </Text>
-
-            <Text type="secondary" style={{ fontSize: 12, color: '#aaa' }}>
-              Cookie:{' '}
-              <code style={{ background: '#f5f5f5', padding: '2px 6px', borderRadius: 4 }}>
-                locale={locale}
-              </code>
-            </Text>
-          </Space>
-        </Card>
-
-        {/* Footer nhỏ */}
-        <div style={{ textAlign: 'center', marginTop: 40, color: '#999', fontSize: 14 }}>
-          Powered by <strong>Next.js</strong> + <strong>next-intl</strong> +{' '}
-          <strong>Ant Design</strong>
+          <Button
+            type="primary"
+            size="large"
+            icon={<ArrowRightOutlined />}
+            onClick={handleExplore}
+            className="h-16 px-12 text-xl font-semibold rounded-2xl shadow-xl flex items-center mx-auto transition-all duration-300 hover:shadow-2xl hover:scale-105"
+            style={{
+              background: 'linear-gradient(to right, #6366f1, #a855f7)',
+              border: 'none',
+              boxShadow: '0 12px 30px rgba(99, 102, 241, 0.35)',
+            }}
+          >
+            {t('getStarted')}
+          </Button>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

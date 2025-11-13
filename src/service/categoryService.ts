@@ -29,7 +29,13 @@ export const categoryService = {
   },
 
   async updateOrder(categories: { id: string | number; order: number }[]) {
-    const { data } = await api.patch(`/categories/order`, { categories });
+    // Chuyển tất cả id sang number trước khi gửi
+    const payload = categories.map((cat) => ({
+      id: Number(cat.id),
+      order: cat.order,
+    }));
+
+    const { data } = await api.patch(`/categories/order`, payload);
     return data;
   },
 };

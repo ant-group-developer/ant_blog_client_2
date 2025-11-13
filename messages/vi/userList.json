@@ -1,0 +1,17 @@
+{
+  "pageTitle": "Quản lý người dùng",
+  "searchPlaceholder": "Tìm kiếm người dùng...",
+  "id": "ID",
+  "email": "Email",
+  "status": "Trạng thái",
+  "online": "Online",
+  "offline": "Offline",
+  "createdAt": "Tạo lúc",
+  "updatedAt": "Cập nhật lúc",
+  "actions": "Hành động",
+  "edit": "Sửa",
+  "you": "Bạn",
+  "updateSuccess": "Cập nhật thành công!",
+  "updateFailed": "Cập nhật thất bại",
+  "search": "tìm kiếm"
+}

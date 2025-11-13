@@ -20,6 +20,7 @@ export const userService = {
 
   async updateUser(userId: string, payload: Partial<User>) {
     const { data } = await api.patch(`/users/${userId}`, payload);
+
     return data;
   },
 

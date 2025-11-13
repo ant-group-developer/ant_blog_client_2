@@ -1,0 +1,17 @@
+{
+  "pageTitle": "User Management",
+  "searchPlaceholder": "Search users...",
+  "id": "ID",
+  "email": "Email",
+  "status": "Status",
+  "online": "Online",
+  "offline": "Offline",
+  "createdAt": "Created At",
+  "updatedAt": "Updated At",
+  "actions": "Actions",
+  "edit": "Edit",
+  "you": "You",
+  "updateSuccess": "Updated successfully!",
+  "updateFailed": "Update failed",
+  "search": "search"
+}

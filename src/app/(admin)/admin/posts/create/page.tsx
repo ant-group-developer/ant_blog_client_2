@@ -80,13 +80,12 @@ export default function CreatePostPage() {
         description_en: values.description_en || undefined,
         content_vi: values.content_vi,
         content_en: values.content_en || undefined,
-        slug: 'slug',
+        slug: values.slug,
         thumbnail: values.thumbnail,
         category_id: values.category_id,
         creator_id: currentUser.id,
       };
 
-      console.log('🚀 Created post payload:', payload.category_id);
       await createPostMutation.mutateAsync(payload);
       messageApi.success('Tạo bài viết thành công!');
 
@@ -239,6 +238,9 @@ export default function CreatePostPage() {
                 </Row>
 
                 <Divider style={{ margin: '32px 0' }} />
+                <Form.Item label="Slug" name="slug">
+                  <Input placeholder="Nhập Slug..." />
+                </Form.Item>
 
                 {/* === DANH MỤC & THUMBNAIL === */}
                 <Row gutter={24}>
@@ -274,11 +276,13 @@ export default function CreatePostPage() {
                       ]}
                       extra="Khuyến nghị: 1200x630px"
                     >
-                      <Input
-                        placeholder="https://example.com/image.jpg"
-                        onChange={handleThumbnailChange}
-                        suffix={<EyeOutlined style={{ color: '#aaa' }} />}
-                      />
+                      <Space.Compact style={{ width: '100%' }}>
+                        <Input
+                          placeholder="https://example.com/image.jpg"
+                          onChange={handleThumbnailChange}
+                          suffix={<EyeOutlined style={{ color: '#aaa' }} />}
+                        />
+                      </Space.Compact>
                     </Form.Item>
                   </Col>
                 </Row>

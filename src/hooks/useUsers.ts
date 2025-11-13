@@ -28,18 +28,60 @@ export const useUpdateUser = () => {
   const { setCurrentUser } = useAuthStore();
 
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: Partial<User> }) =>
-      userService.updateUser(id, payload),
-    onSuccess: (res) => {
+    mutationFn: async ({ id, payload }: { id: string; payload: Partial<User> }) => {
+      const res = await userService.updateUser(id, payload);
+
+      // ✅ FIX: Nếu vẫn không có data, tạo updated user từ payload + cache cũ
+      if (!res.data) {
+        const cachedUsers = queryClient.getQueriesData<any>({ queryKey: ['users'] });
+        let existingUser: User | null = null;
+
+        for (const [, queryData] of cachedUsers) {
+          if (queryData?.data) {
+            existingUser = queryData.data.find((u: User) => u.id === id);
+            if (existingUser) break;
+          }
+        }
+
+        if (!existingUser) {
+          const current = useAuthStore.getState().currentUser;
+          if (current?.id === id) {
+            existingUser = current;
+          }
+        }
+
+        // Merge payload với user hiện tại
+        if (existingUser) {
+          const updatedUser: User = {
+            ...existingUser,
+            ...payload,
+            updated_at: new Date().toISOString(),
+          };
+
+          return {
+            ...res,
+            data: updatedUser,
+          };
+        }
+      }
+
+      return res;
+    },
+    onSuccess: (res, variables) => {
       const updatedUser = res.data;
 
-      // Cập nhật currentUser nếu là chính mình
+      if (!updatedUser) {
+        //  Nếu không có data, invalidate để refetch
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+        return;
+      }
+
       const current = useAuthStore.getState().currentUser;
       if (current?.id === updatedUser.id) {
         setCurrentUser(updatedUser);
       }
 
-      // Cập nhật cache danh sách
+      //  Cập nhật cache với optimistic update
       queryClient.setQueriesData({ queryKey: ['users'] }, (old: any) => {
         if (!old) return old;
         return {
@@ -48,7 +90,12 @@ export const useUpdateUser = () => {
         };
       });
 
-      // Invalidate để refetch nếu cần
+      // Invalidate để đảm bảo data đồng bộ
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error) => {
+      console.error('Update user failed:', error);
+      // Invalidate để refetch data gốc
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });

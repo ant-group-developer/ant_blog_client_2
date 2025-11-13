@@ -1,15 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { PageContainer } from '@ant-design/pro-components';
-import { Table, Button, Space, message, Popconfirm, Input, Tag } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-} from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { PageContainer, DragSortTable } from '@ant-design/pro-components';
+import type { ProColumns } from '@ant-design/pro-components';
+import { Button, Space, message, Popconfirm, Input, Tag } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
@@ -23,13 +18,15 @@ const { Search } = Input;
 
 export default function CategoriesPage() {
   const router = useRouter();
-  const locale = useLocale(); // 'vi' | 'en'
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const { currentUser } = useAuthStore();
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [dataSource, setDataSource] = useState<Category[]>([]);
+  const [messageApi, contextHolder] = message.useMessage();
 
   // === FETCH CATEGORIES ===
   const { data, isLoading } = useQuery({
@@ -45,81 +42,89 @@ export default function CategoriesPage() {
   const categories: Category[] = data?.data || [];
   const paginationData = data?.pagination;
 
+  // Sắp xếp dataSource theo order khi fetch xong
+  useEffect(() => {
+    if (categories.length > 0) {
+      const sorted = [...categories].sort((a, b) => a.order - b.order);
+      setDataSource(sorted);
+    }
+  }, [categories]);
+
   // === DELETE MUTATION ===
   const deleteMutation = useMutation({
     mutationFn: (id: string) => categoryService.deleteCategory(id),
     onSuccess: () => {
-      message.success(
-        locale === 'vi' ? 'Xóa danh mục thành công!' : 'Category deleted successfully!'
-      );
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
-    },
-    onError: () => message.error(locale === 'vi' ? 'Xóa thất bại' : 'Delete failed'),
+  setTimeout(() => {
+    message.success(
+      locale === 'vi' ? 'Cập nhật thứ tự thành công!' : 'Order updated successfully!'
+    );
+  }, 0);
+  queryClient.invalidateQueries({ queryKey: ['categories'] });
+}
+
+    onError: () => messageApi.error(locale === 'vi' ? 'Xóa thất bại' : 'Delete failed'),
   });
 
   // === UPDATE ORDER MUTATION ===
   const updateOrderMutation = useMutation({
-    mutationFn: (categories: { id: string; order: number }[]) =>
-      categoryService.updateOrder(categories),
+    mutationFn: (payload: { id: number; order: number }[]) => categoryService.updateOrder(payload),
     onSuccess: () => {
-      message.success(
+      messageApi.success(
         locale === 'vi' ? 'Cập nhật thứ tự thành công!' : 'Order updated successfully!'
       );
       queryClient.invalidateQueries({ queryKey: ['categories'] });
     },
-    onError: () =>
-      message.error(locale === 'vi' ? 'Cập nhật thứ tự thất bại' : 'Update order failed'),
+    onError: () => {
+      messageApi.error(locale === 'vi' ? 'Cập nhật thứ tự thất bại' : 'Update order failed');
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+    },
   });
 
   // === CHECK PERMISSIONS ===
   const canEdit = (record: Category) => currentUser?.id === record.creator_id;
   const canDelete = (record: Category) => currentUser?.id === record.creator_id;
 
-  const handleMoveUp = (index: number) => {
-    if (index === 0 || !canEdit(categories[index])) return;
-    const newCategories = [...categories];
-    [newCategories[index - 1], newCategories[index]] = [
-      newCategories[index],
-      newCategories[index - 1],
-    ];
-    const payload = newCategories.map((cat, idx) => ({ id: cat.id, order: idx + 1 }));
+  // === HANDLE DRAG SORT ===
+  const handleDragSortEnd = (
+    beforeIndex: number,
+    afterIndex: number,
+    newDataSource: Category[]
+  ) => {
+    // Cập nhật UI ngay
+    setDataSource(newDataSource);
+
+    // Tạo payload: id + order mới
+    const payload = newDataSource.map((cat, idx) => ({
+      id: Number(cat.id),
+      order: idx + 1, // order theo vị trí mới
+    }));
+
     updateOrderMutation.mutate(payload);
   };
 
-  const handleMoveDown = (index: number) => {
-    if (index === categories.length - 1 || !canEdit(categories[index])) return;
-    const newCategories = [...categories];
-    [newCategories[index], newCategories[index + 1]] = [
-      newCategories[index + 1],
-      newCategories[index],
-    ];
-    const payload = newCategories.map((cat, idx) => ({ id: cat.id, order: idx + 1 }));
-    updateOrderMutation.mutate(payload);
-  };
-
-  const columns = [
+  // === TABLE COLUMNS ===
+  const columns: ProColumns<Category>[] = [
     {
-      title: locale === 'vi' ? 'STT' : 'No.',
-      key: 'index',
+      title: locale === 'vi' ? 'Sắp xếp' : 'Sort',
+      dataIndex: 'sort',
       width: 60,
-      align: 'center' as const,
-      render: (_: any, __: any, index: number) => (
-        <span style={{ fontWeight: 500 }}>
-          {(pagination.page - 1) * pagination.pageSize + index + 1}
-        </span>
-      ),
+      className: 'drag-visible',
     },
     {
       title: locale === 'vi' ? 'Tên (Tiếng Việt)' : 'Name (Vietnamese)',
       dataIndex: 'name_vi',
       key: 'name_vi',
-      render: (text: string) => <strong style={{ fontSize: 14 }}>{text}</strong>,
+      width: 250,
+      ellipsis: true,
+      render: (text: any) => <strong style={{ fontSize: 14 }}>{text}</strong>,
     },
     {
       title: locale === 'vi' ? 'Tên (Tiếng Anh)' : 'Name (English)',
       dataIndex: 'name_en',
       key: 'name_en',
-      render: (text: string) =>
+      width: 250,
+      ellipsis: true,
+      render: (text: any) =>
         text ? (
           <span style={{ color: '#595959' }}>{text}</span>
         ) : (
@@ -130,7 +135,9 @@ export default function CategoriesPage() {
       title: 'Slug',
       dataIndex: 'slug',
       key: 'slug',
-      render: (text: string) => (
+      width: 200,
+      ellipsis: true,
+      render: (text: any) => (
         <code
           style={{
             background: '#f5f5f5',
@@ -145,48 +152,10 @@ export default function CategoriesPage() {
       ),
     },
     {
-      title: locale === 'vi' ? 'Thứ tự' : 'Order',
-      dataIndex: 'order',
-      key: 'order',
-      width: 140,
-      align: 'center' as const,
-      render: (order: number, record: Category, index: number) => (
-        <Space size="small">
-          <Button
-            type="text"
-            size="small"
-            icon={<ArrowUpOutlined />}
-            onClick={() => handleMoveUp(index)}
-            disabled={index === 0 || !canEdit(record)}
-            title={locale === 'vi' ? 'Di chuyển lên' : 'Move up'}
-          />
-          <span
-            style={{
-              minWidth: 24,
-              textAlign: 'center',
-              display: 'inline-block',
-              fontWeight: 600,
-              fontSize: 14,
-            }}
-          >
-            {order}
-          </span>
-          <Button
-            type="text"
-            size="small"
-            icon={<ArrowDownOutlined />}
-            onClick={() => handleMoveDown(index)}
-            disabled={index === categories.length - 1 || !canEdit(record)}
-            title={locale === 'vi' ? 'Di chuyển xuống' : 'Move down'}
-          />
-        </Space>
-      ),
-    },
-    {
       title: locale === 'vi' ? 'Hành động' : 'Actions',
       key: 'action',
-      width: 120,
-      align: 'center' as const,
+      width: 140,
+      align: 'center',
       render: (_: any, record: Category) => (
         <Space size="small">
           <Button
@@ -240,16 +209,25 @@ export default function CategoriesPage() {
             marginTop: 16,
           }}
         >
-          <Search
-            placeholder={locale === 'vi' ? 'Tìm kiếm tên danh mục...' : 'Search categories...'}
-            onSearch={(value) => {
-              setSearchKeyword(value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
-            }}
-            allowClear
-            enterButton
-            style={{ width: 320 }}
-          />
+          <Space.Compact style={{ width: 320 }}>
+            <Input
+              placeholder={locale === 'vi' ? 'Tìm kiếm tên danh mục...' : 'Search categories...'}
+              allowClear
+              onPressEnter={(e) => setSearchKeyword((e.target as HTMLInputElement).value)}
+              size="middle"
+            />
+            <Button
+              type="primary"
+              onClick={() => {
+                const input = document.querySelector<HTMLInputElement>('.ant-input')!;
+                setSearchKeyword(input.value);
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
+            >
+              {locale === 'vi' ? 'Tìm kiếm' : 'Search'}
+            </Button>
+          </Space.Compact>
+
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -261,11 +239,10 @@ export default function CategoriesPage() {
       }
     >
       <div style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
-        <Table
+        <DragSortTable<Category>
           columns={columns}
-          dataSource={categories}
           rowKey="id"
-          loading={isLoading || deleteMutation.isPending || updateOrderMutation.isPending}
+          search={false}
           pagination={{
             current: pagination.page,
             pageSize: pagination.pageSize,
@@ -278,6 +255,10 @@ export default function CategoriesPage() {
             onChange: (page, pageSize) => setPagination({ page, pageSize }),
           }}
           scroll={{ x: 800 }}
+          loading={isLoading || deleteMutation.isPending || updateOrderMutation.isPending}
+          dataSource={dataSource}
+          dragSortKey="sort"
+          onDragSortEnd={handleDragSortEnd}
         />
       </div>
 

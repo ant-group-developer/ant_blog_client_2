@@ -1,0 +1,11 @@
+{
+  "title": "MyBlog",
+  "home": "Trang chủ",
+  "admin": "Admin",
+  "about": "Giới thiệu",
+  "contact": "Liên hệ",
+  "postsTitle": "Bài viết",
+  "login": "Đăng nhập",
+  "logout": "Đăng xuất",
+  "logoutSuccess": "Đăng xuất thành công!"
+}

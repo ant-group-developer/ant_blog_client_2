@@ -1,0 +1,44 @@
+{
+  "okText": "Save Changes",
+  "cancelText": "Cancel",
+  "updateSuccess": "Updated successfully!",
+  "updateFailed": "Update failed",
+  "noChange": "No changes detected",
+
+  "modalTitleUser": "Edit Personal Info",
+  "modalTitlePost": "Edit Post",
+  "modalTitleCategory": "Edit Category",
+
+  "user": {
+    "email": "Email",
+    "enterEmail": "Please enter email!",
+    "validatedEmail": "Please enter a valid email!",
+    "password": "New Password",
+    "validated": "Password must be at least 6 characters!",
+    "passwordExtra": "Leave empty if you don't want to change",
+    "status": "Status",
+    "online": "Online",
+    "offline": "Offline",
+    "noData": "No user information"
+  },
+
+  "post": {
+    "title_vi": "Title (Vietnamese)",
+    "validated": "please complete the required fields!",
+    "description_vi": "Short Description (Vietnamese)",
+    "content_vi": "Content (Vietnamese)",
+    "title_en": "Title (English)",
+    "description_en": "Short Description (English)",
+    "content_en": "Content (English)",
+    "thumbnail": "Thumbnail URL",
+    "required": "(required)",
+    "optional": "(optional)"
+  },
+
+  "category": {
+    "validated": "please complete the required fields!",
+    "name_vi": "Name (Vietnamese)",
+    "name_en": "Name (English)",
+    "slug": "Slug"
+  }
+}

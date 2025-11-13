@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ProLayout } from '@ant-design/pro-components';
-import type { ProSettings } from '@ant-design/pro-components';
 import {
   HomeOutlined,
   UserOutlined,
@@ -17,58 +16,74 @@ import type { MenuProps } from 'antd';
 import { useAuthStore } from '@/store/authStore';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useAntdLocale } from '@/hooks/useAntLocale';
-
-const defaultProps = {
-  route: {
-    path: '/',
-    routes: [
-      { path: '/admin', name: 'Dashboard', icon: <HomeOutlined /> },
-      { path: '/admin/users', name: 'Người dùng', icon: <UserOutlined /> },
-      { path: '/admin/posts', name: 'Bài viết', icon: <UnorderedListOutlined /> },
-      { path: '/admin/categories', name: 'Danh mục', icon: <UnorderedListOutlined /> },
-    ],
-  },
-};
+import { useTranslations } from 'next-intl';
+import ClientOnlyProLayout from '@/components/ClientOnlyProLayout';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { currentUser, logout } = useAuthStore();
   const antdLocale = useAntdLocale();
+  const t = useTranslations('layoutAdmin');
 
   const handleLogout = () => {
     logout();
     router.push('/auth/login');
   };
 
-  const avatarMenu: MenuProps['items'] = [
-    {
-      key: 'email',
-      label: <span>{currentUser?.email || 'User'}</span>,
-      disabled: true,
-    },
-    { type: 'divider' },
-    {
-      key: 'logout',
-      label: (
-        <Space>
-          <LogoutOutlined />
-          Đăng xuất
-        </Space>
-      ),
-      onClick: handleLogout,
-    },
-  ];
+  // === Avatar menu memoized ===
+  const avatarMenu: MenuProps['items'] = useMemo(() => {
+    if (!currentUser) return [];
+    return [
+      {
+        key: 'email',
+        label: <span>{currentUser.email || t('userDefault')}</span>,
+        disabled: true,
+      },
+      { type: 'divider' },
+      {
+        key: 'logout',
+        label: (
+          <Space>
+            <LogoutOutlined />
+            {t('logout')}
+          </Space>
+        ),
+        onClick: handleLogout,
+      },
+    ];
+  }, [currentUser, t]);
+
+  // === Sider menu memoized ===
+  const siderRoutes = useMemo(
+    () => [
+      { path: '/posts', name: t('home'), icon: <HomeOutlined /> },
+      { path: '/admin/users', name: t('users'), icon: <UserOutlined /> },
+      { path: '/admin/posts', name: t('posts'), icon: <UnorderedListOutlined /> },
+      { path: '/admin/categories', name: t('categories'), icon: <UnorderedListOutlined /> },
+    ],
+    [t]
+  );
+
+  const defaultProps = useMemo(
+    () => ({
+      route: {
+        path: '/',
+        routes: siderRoutes,
+      },
+    }),
+    [siderRoutes]
+  );
 
   return (
     <ConfigProvider locale={antdLocale}>
-      <div style={{ height: '100vh', overflow: 'hidden' }}>
-        <ProLayout
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <ClientOnlyProLayout
           {...defaultProps}
-          title="Admin Panel"
+          title={t('adminPanel')}
           logo="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
           location={{ pathname }}
-          fixSiderbar={true}
+          fixSiderbar
           layout="mix"
           splitMenus={false}
           siderWidth={208}
@@ -80,9 +95,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           avatarProps={
             currentUser
               ? {
-                  src: 'https://gw.alipayobjects.com/zos/antfincdn/efFD%24IOql2/weixintupian_20170331104822.jpg',
+                  src: 'https://img.tripi.vn/cdn-cgi/image/width=700,height=700/https://gcs.tripi.vn/public-tripi/tripi-feed/img/482740TND/anh-mo-ta.png',
                   size: 'small',
-                  title: currentUser.email || 'User',
+                  title: currentUser.email || t('userDefault'),
                   render: (_, dom) => (
                     <Dropdown menu={{ items: avatarMenu }} placement="bottomRight">
                       {dom}
@@ -96,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       icon={<LoginOutlined />}
                       onClick={() => router.push('/auth/login')}
                     >
-                      Đăng nhập
+                      {t('login')}
                     </Button>
                   ),
                 }
@@ -120,17 +135,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </a>
           )}
         >
-          <div
-            style={{
-              padding: 24,
-              background: '#f5f5f5',
-              minHeight: 'calc(100vh - 64px)',
-              overflow: 'auto',
-            }}
-          >
-            {children}
-          </div>
-        </ProLayout>
+          <div style={{ flex: 1, background: '#f5f5f5', overflow: 'hidden' }}>{children}</div>
+        </ClientOnlyProLayout>
       </div>
     </ConfigProvider>
   );

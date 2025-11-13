@@ -6,13 +6,17 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { userService } from '@/service/userService';
 import { jwtDecode } from 'jwt-decode';
+import { useTranslations } from 'next-intl';
 
 const { Title, Text } = Typography;
 
 export default function LoginForm() {
+  const [form] = Form.useForm();
   const router = useRouter();
+
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
+  const t = useTranslations('auth');
 
   const onFinish = async (values: { email: string; password: string }) => {
     try {
@@ -20,7 +24,7 @@ export default function LoginForm() {
       const res = await userService.login(values.email, values.password);
 
       if (!res || !res.accessToken) {
-        messageApi.error(res?.message || 'Email hoặc mật khẩu không đúng');
+        messageApi.error(res?.message || t('login.errorMessage'));
         return;
       }
 
@@ -36,11 +40,11 @@ export default function LoginForm() {
         // Bỏ qua nếu không decode được
       }
 
-      messageApi.success('Đăng nhập thành công!');
-      setTimeout(() => router.push('/admin'), 800);
+      messageApi.success(t('login.successMessage'));
+      setTimeout(() => router.push('/posts'), 800);
     } catch (error: any) {
       console.error(error);
-      messageApi.error(error.response?.data?.message || 'Đăng nhập thất bại');
+      messageApi.error(error.response?.data?.message || t('login.loginFaild'));
     } finally {
       setLoading(false);
     }
@@ -64,12 +68,13 @@ export default function LoginForm() {
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <Title level={3} style={{ margin: 0 }}>
-            Đăng nhập
+            {t('login.title')}
           </Title>
-          <Text type="secondary">Nhập email và mật khẩu</Text>
+          <Text type="secondary">{t('login.subtitle')}</Text>
         </div>
 
         <Form
+          form={form}
           layout="vertical"
           onFinish={onFinish}
           autoComplete="off"
@@ -81,28 +86,36 @@ export default function LoginForm() {
           <Form.Item
             name="email"
             rules={[
-              { required: true, message: 'Vui lòng nhập email!' },
-              { type: 'email', message: 'Email không hợp lệ!' },
+              { required: true, message: t('login.emailRequired') },
+              { type: 'email', message: t('login.emailInvalid') },
             ]}
           >
-            <Input prefix={<UserOutlined />} size="large" placeholder="Email" />
+            <Input
+              prefix={<UserOutlined />}
+              size="large"
+              placeholder={t('login.emailPlaceholder')}
+            />
           </Form.Item>
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
+            rules={[{ required: true, message: t('login.passwordRequired') }]}
           >
-            <Input.Password prefix={<LockOutlined />} size="large" placeholder="Mật khẩu" />
+            <Input.Password
+              prefix={<LockOutlined />}
+              size="large"
+              placeholder={t('login.passwordPlaceholder')}
+            />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block size="large" loading={loading}>
-              Đăng nhập
+              {t('login.title')}
             </Button>
           </Form.Item>
 
           <div style={{ textAlign: 'center' }}>
-            <Text>Chưa có tài khoản? </Text>
+            <Text>{t('login.noAccount')} </Text>
             <a
               onClick={(e) => {
                 e.preventDefault();
@@ -110,7 +123,7 @@ export default function LoginForm() {
               }}
               style={{ color: '#1677ff', cursor: 'pointer' }}
             >
-              Đăng Ký
+              {t('login.registerLink')}
             </a>
           </div>
         </Form>

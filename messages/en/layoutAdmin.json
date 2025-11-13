@@ -1,0 +1,10 @@
+{
+  "home": "Home",
+  "users": "Users",
+  "posts": "Posts",
+  "categories": "Categories",
+  "adminPanel": "Admin Panel",
+  "login": "Login",
+  "logout": "Logout",
+  "userDefault": "User"
+}

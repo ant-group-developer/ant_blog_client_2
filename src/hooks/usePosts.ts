@@ -40,6 +40,18 @@ export const useCreatePost = () => {
     },
   });
 };
+export const usePostById = (postId: string | number, enabled = true) => {
+  return useQuery({
+    queryKey: ['post', postId],
+    queryFn: async () => {
+      const res = await postService.getPostById(postId);
+      return res;
+    },
+    enabled: !!postId && enabled, // Chỉ fetch khi có postId
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+};
 
 // UPDATE POST
 export const useUpdatePost = () => {
