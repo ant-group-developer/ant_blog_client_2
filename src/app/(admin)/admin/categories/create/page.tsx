@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Card, Form, Input, Button, message, Space, InputNumber } from "antd";
-import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
-import { useRouter } from "next/navigation";
-import { categoryService } from "@/service/categoryService";
-import { useAuthStore } from "@/store/authStore";
-import { useTranslations } from "next-intl";
+import React from 'react';
+import { Card, Form, Input, Button, message, Space, InputNumber } from 'antd';
+import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
+import { categoryService } from '@/service/categoryService';
+import { useAuthStore } from '@/store/authStore';
+import { useTranslations } from 'next-intl';
 
 export default function CreateCategoryPage() {
   const [form] = Form.useForm();
   const router = useRouter();
   const [messageApi, contextHolder] = message.useMessage();
   const { currentUser } = useAuthStore();
-  const t = useTranslations("categoryList");
+  const t = useTranslations('categoryList');
 
   const handleSubmit = async (values: any) => {
     if (!currentUser?.id) {
-      messageApi.error(t("unspecified"));
+      messageApi.error(t('unspecified'));
       return;
     }
 
@@ -28,10 +28,10 @@ export default function CreateCategoryPage() {
       };
 
       await categoryService.createCategory(payload);
-      messageApi.success(t("createSuccess"));
-      router.push("/admin/categories");
+      messageApi.success(t('createSuccess'));
+      router.push('/admin/categories');
     } catch (error: any) {
-      messageApi.error(error.response?.data?.message || t("createFailed"));
+      messageApi.error(error.response?.data?.message || t('createFailed'));
     }
   };
 
@@ -40,31 +40,29 @@ export default function CreateCategoryPage() {
       {contextHolder}
       <div
         style={{
-          minHeight: "100vh",
-          background: "#f0f2f5",
-          padding: "24px 16px",
+          minHeight: '100vh',
+          background: '#f0f2f5',
+          padding: '24px 16px',
         }}
       >
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <Card
             title={
               <Space>
                 <Button
                   icon={<ArrowLeftOutlined />}
-                  onClick={() => router.push("/admin/categories")}
+                  onClick={() => router.push('/admin/categories')}
                 >
-                  {t("back")}
+                  {t('back')}
                 </Button>
-                <span style={{ fontSize: 18, fontWeight: 600 }}>
-                  {t("createCategory")}
-                </span>
+                <span style={{ fontSize: 18, fontWeight: 600 }}>{t('createCategory')}</span>
               </Space>
             }
           >
             <div
               style={{
-                maxHeight: "calc(100vh - 260px)",
-                overflowY: "auto",
+                maxHeight: 'calc(100vh - 260px)',
+                overflowY: 'auto',
                 paddingRight: 8,
               }}
             >
@@ -72,23 +70,21 @@ export default function CreateCategoryPage() {
                 {/* === TIẾNG VIỆT === */}
                 <div
                   style={{
-                    background: "#fff7e6",
+                    background: '#fff7e6',
                     padding: 16,
                     borderRadius: 8,
                     marginBottom: 24,
-                    border: "1px solid #ffd8b0",
+                    border: '1px solid #ffd8b0',
                   }}
                 >
-                  <strong style={{ color: "#d4380d", fontSize: 15 }}>
-                    {t("vi")}
-                  </strong>
+                  <strong style={{ color: '#d4380d', fontSize: 15 }}>{t('vi')}</strong>
                   <Form.Item
-                    label={t("nameVi")}
+                    label={t('nameVi')}
                     name="name_vi"
                     rules={[
                       {
                         required: true,
-                        message: t("validate"),
+                        message: t('validate'),
                       },
                     ]}
                   >
@@ -99,23 +95,21 @@ export default function CreateCategoryPage() {
                 {/* === TIẾNG ANH === */}
                 <div
                   style={{
-                    background: "#e6f7ff",
+                    background: '#e6f7ff',
                     padding: 16,
                     borderRadius: 8,
                     marginBottom: 24,
-                    border: "1px solid #91d5ff",
+                    border: '1px solid #91d5ff',
                   }}
                 >
-                  <strong style={{ color: "#1890ff", fontSize: 15 }}>
-                    {t("en")}
-                  </strong>
+                  <strong style={{ color: '#1890ff', fontSize: 15 }}>{t('en')}</strong>
                   <Form.Item
-                    label={t("nameEn")}
+                    label={t('nameEn')}
                     name="name_en"
                     rules={[
                       {
                         required: true,
-                        message: t("validate"),
+                        message: t('validate'),
                       },
                     ]}
                   >
@@ -126,20 +120,18 @@ export default function CreateCategoryPage() {
                 {/* === SLUG === */}
                 <div
                   style={{
-                    background: "#f6ffed",
+                    background: '#f6ffed',
                     padding: 16,
                     borderRadius: 8,
                     marginBottom: 24,
-                    border: "1px solid #b7eb8f",
+                    border: '1px solid #b7eb8f',
                   }}
                 >
-                  <strong style={{ color: "#389e0d", fontSize: 15 }}>
-                    {t("slug")}
-                  </strong>
+                  <strong style={{ color: '#389e0d', fontSize: 15 }}>{t('slug')}</strong>
                   <Form.Item
-                    label={t("slug")}
+                    label={t('slug')}
                     name="slug"
-                    rules={[{ required: true, message: t("validate") }]}
+                    rules={[{ required: true, message: t('validate') }]}
                   >
                     <Input size="large" placeholder="..." />
                   </Form.Item>
@@ -148,28 +140,21 @@ export default function CreateCategoryPage() {
                 {/* === ORDER === */}
                 <div
                   style={{
-                    background: "#fff0f6",
+                    background: '#fff0f6',
                     padding: 16,
                     borderRadius: 8,
                     marginBottom: 24,
-                    border: "1px solid #ffadd2",
+                    border: '1px solid #ffadd2',
                   }}
                 >
-                  <strong style={{ color: "#c41d7f", fontSize: 15 }}>
-                    {t("order")}
-                  </strong>
+                  <strong style={{ color: '#c41d7f', fontSize: 15 }}>{t('order')}</strong>
                   <Form.Item
-                    label={t("order")}
+                    label={t('order')}
                     name="order"
-                    rules={[{ required: true, message: t("validate") }]}
+                    rules={[{ required: true, message: t('validate') }]}
                   >
-                    <Space.Compact style={{ width: "100%" }}>
-                      <InputNumber
-                        controls
-                        size="large"
-                        min={1}
-                        style={{ width: "100%" }}
-                      />
+                    <Space.Compact style={{ width: '100%' }}>
+                      <InputNumber controls size="large" min={1} style={{ width: '100%' }} />
                     </Space.Compact>
                   </Form.Item>
                 </div>
@@ -177,19 +162,11 @@ export default function CreateCategoryPage() {
                 {/* === BUTTONS === */}
                 <Form.Item>
                   <Space size="middle">
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      icon={<SaveOutlined />}
-                      size="large"
-                    >
-                      {t("createCategory")}
+                    <Button type="primary" htmlType="submit" icon={<SaveOutlined />} size="large">
+                      {t('createCategory')}
                     </Button>
-                    <Button
-                      size="large"
-                      onClick={() => router.push("/admin/categories")}
-                    >
-                      {t("cancel")}
+                    <Button size="large" onClick={() => router.push('/admin/categories')}>
+                      {t('cancel')}
                     </Button>
                   </Space>
                 </Form.Item>

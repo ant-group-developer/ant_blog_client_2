@@ -20,7 +20,7 @@
   "deletedFail": "Xóa thất bại",
   "noDescription": "Chưa có mô tả",
   "notAvailable": "Không có dữ liệu",
-  "postDeletedConfirm": "Bạn có chắc muốn xóa \"{title}\"?",
+  "postDeletedConfirm": "Bạn có chắc muốn xóa bài viết?",
   "totalPosts": "Tổng {total} bài viết",
   "loading": "Đang tải...",
   "noData": "Không có bài viết nào",

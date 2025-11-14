@@ -77,7 +77,7 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
 
       // Gửi API
       await updateMutation.mutateAsync({
-        id: Number(post.id), // "7" → 7
+        id: Number(post.id),
         payload,
       });
 

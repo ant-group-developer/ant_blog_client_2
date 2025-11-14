@@ -1,24 +1,15 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import {
-  ProTable,
-  type ProColumns,
-  PageContainer,
-} from "@ant-design/pro-components";
-import { Avatar, message, Space, Image, Button, Input, Popconfirm } from "antd";
-import {
-  EditOutlined,
-  PictureOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
-import { usePosts, useUpdatePost, useDeletePost } from "@/hooks/usePosts";
-import { useAuthStore } from "@/store/authStore";
-import PostEdit from "@/components/post/PostEdit";
-import { Post } from "@/types";
-import { useTranslations } from "next-intl";
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { ProTable, type ProColumns, PageContainer } from '@ant-design/pro-components';
+import { Avatar, message, Space, Image, Button, Input, Popconfirm } from 'antd';
+import { EditOutlined, PictureOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { usePosts, useUpdatePost, useDeletePost } from '@/hooks/usePosts';
+import { useAuthStore } from '@/store/authStore';
+import PostEdit from '@/components/post/PostEdit';
+import { Post } from '@/types';
+import { useTranslations } from 'next-intl';
 
 const { Search } = Input;
 
@@ -31,24 +22,24 @@ export default function PostListPage() {
   const [params, setParams] = useState({
     page: 1,
     pageSize: 10,
-    keyword: "",
+    keyword: '',
   });
 
   const { data, isLoading } = usePosts(params);
   const updateMutation = useUpdatePost();
   const deleteMutation = useDeletePost();
-  const t = useTranslations("postList");
+  const t = useTranslations('postList');
 
   const handleUpdate = (post: Post) => {
     updateMutation.mutate(
       { id: post.id, payload: post },
       {
         onSuccess: () => {
-          messageApi.success(t("updateSuccess"));
+          messageApi.success(t('updateSuccess'));
           setEditingPost(null);
         },
         onError: (err: any) => {
-          messageApi.error(err.response?.data?.message || t("updateFailed"));
+          messageApi.error(err.response?.data?.message || t('updateFailed'));
         },
       }
     );
@@ -57,30 +48,28 @@ export default function PostListPage() {
   const handleDelete = (post: Post) => {
     deleteMutation.mutate(post.id, {
       onSuccess: () => {
-        messageApi.success(t("deleteSuccess"));
+        messageApi.success(t('deleteSuccess'));
         setParams((p) => ({ ...p })); // trigger refetch
       },
       onError: (err: any) => {
-        messageApi.error(err.response?.data?.message || t("deleteFailed"));
+        messageApi.error(err.response?.data?.message || t('deleteFailed'));
       },
     });
   };
 
   const columns: ProColumns<Post>[] = [
     {
-      title: t("id"),
-      dataIndex: "id",
+      title: t('id'),
+      dataIndex: 'id',
       width: 80,
       search: false,
       render: (id) => (
-        <span style={{ fontFamily: "monospace", fontSize: 12 }}>
-          {String(id).slice(0, 8)}...
-        </span>
+        <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{String(id).slice(0, 8)}...</span>
       ),
     },
     {
-      title: t("post"),
-      dataIndex: "title_vi",
+      title: t('post'),
+      dataIndex: 'title_vi',
       width: 320,
       render: (_, record) => (
         <Space>
@@ -89,7 +78,7 @@ export default function PostListPage() {
               src={record.thumbnail}
               width={40}
               height={40}
-              style={{ objectFit: "cover", borderRadius: 4 }}
+              style={{ objectFit: 'cover', borderRadius: 4 }}
               preview={false}
             />
           ) : (
@@ -99,9 +88,9 @@ export default function PostListPage() {
             <div
               style={{
                 fontWeight: 500,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}
             >
               {record.title_vi}
@@ -110,10 +99,10 @@ export default function PostListPage() {
               <div
                 style={{
                   fontSize: 11,
-                  color: "#aaa",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
+                  color: '#aaa',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 }}
               >
                 {record.description_vi}
@@ -124,26 +113,26 @@ export default function PostListPage() {
       ),
     },
     {
-      title: t("createdAt"),
-      dataIndex: "created_at",
+      title: t('createdAt'),
+      dataIndex: 'created_at',
       width: 160,
       search: false,
       render: (_, record) =>
-        record.created_at ? new Date(record.created_at).toLocaleString() : "-",
+        record.created_at ? new Date(record.created_at).toLocaleString() : '-',
     },
     {
-      title: t("updatedAt"),
-      dataIndex: "updated_at",
+      title: t('updatedAt'),
+      dataIndex: 'updated_at',
       width: 160,
       search: false,
       render: (_, record) =>
-        record.updated_at ? new Date(record.updated_at).toLocaleString() : "-",
+        record.updated_at ? new Date(record.updated_at).toLocaleString() : '-',
     },
     {
-      title: t("actions"),
-      key: "action",
+      title: t('actions'),
+      key: 'action',
       width: 140,
-      fixed: "right",
+      fixed: 'right',
       search: false,
       render: (_, record) => {
         const isOwner = currentUser?.id === record.creator_id;
@@ -156,26 +145,20 @@ export default function PostListPage() {
               onClick={() => setEditingPost(record)}
               disabled={!isOwner}
             >
-              {t("edit")}
+              {t('edit')}
             </Button>
             <Popconfirm
-              title={t("deleteConfirmTitle")}
-              description={t("deleteConfirmDesc", {
+              title={t('deletePostTitle')}
+              description={t('deletePostDescription', {
                 title: record.title_vi,
               })}
               onConfirm={() => handleDelete(record)}
-              okText={t("delete")}
-              cancelText={t("cancel")}
+              okText={t('delete')}
+              cancelText={t('deleteCancel')}
               okButtonProps={{ danger: true }}
             >
-              <Button
-                type="link"
-                size="small"
-                danger
-                icon={<DeleteOutlined />}
-                disabled={!isOwner}
-              >
-                {t("delete")}
+              <Button type="link" size="small" danger icon={<DeleteOutlined />} disabled={!isOwner}>
+                {t('delete')}
               </Button>
             </Popconfirm>
           </Space>
@@ -188,20 +171,20 @@ export default function PostListPage() {
     <>
       {contextHolder}
       <PageContainer
-        title={t("pageTitle")}
+        title={t('postManagement')}
         breadcrumb={undefined}
         content={
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
               marginTop: 16,
             }}
           >
             <Space.Compact style={{ width: 320 }}>
               <Input
-                placeholder={t("searchPlaceholder")}
+                placeholder={t('searchPlaceholder')}
                 allowClear
                 onPressEnter={(e) => {
                   const value = (e.target as HTMLInputElement).value;
@@ -211,26 +194,25 @@ export default function PostListPage() {
               <Button
                 type="primary"
                 onClick={() => {
-                  const input =
-                    document.querySelector<HTMLInputElement>(".ant-input")!;
+                  const input = document.querySelector<HTMLInputElement>('.ant-input')!;
                   setParams((p) => ({ ...p, keyword: input.value, page: 1 }));
                 }}
               >
-                {t("search")}
+                {t('search')}
               </Button>
             </Space.Compact>
 
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => router.push("/admin/posts/create")}
+              onClick={() => router.push('/admin/posts/create')}
             >
-              {t("createPost")}
+              {t('createPost')}
             </Button>
           </div>
         }
       >
-        <div style={{ background: "#fff", padding: 24, borderRadius: 8 }}>
+        <div style={{ background: '#fff', padding: 24, borderRadius: 8 }}>
           <ProTable<Post>
             columns={columns}
             rowKey="id"
@@ -242,9 +224,8 @@ export default function PostListPage() {
               pageSize: params.pageSize,
               showQuickJumper: true,
               showSizeChanger: true,
-              pageSizeOptions: ["10", "20", "50"],
-              onChange: (page, pageSize) =>
-                setParams((p) => ({ ...p, page, pageSize })),
+              pageSizeOptions: ['10', '20', '50'],
+              onChange: (page, pageSize) => setParams((p) => ({ ...p, page, pageSize })),
             }}
             toolBarRender={false}
             search={false}

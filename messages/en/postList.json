@@ -20,7 +20,7 @@
   "deletedFail": "Delete failed",
   "noDescription": "No description",
   "notAvailable": "No data available",
-  "postDeletedConfirm": "Are you sure to delete \"{title}\"?",
+  "postDeletedConfirm": "Are you sure to delete post?",
   "totalPosts": "Total {total} posts",
   "loading": "Loading...",
   "noData": "No posts found",

@@ -10,7 +10,7 @@ interface CategoryEditProps {
   open: boolean;
   onClose: () => void;
   category: Category | null;
-  onUpdate?: (updated: Category) => void; // trả về category đã update
+  onUpdate?: (updated: Category) => void;
 }
 
 export default function CategoryEdit({ open, onClose, category, onUpdate }: CategoryEditProps) {

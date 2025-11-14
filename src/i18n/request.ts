@@ -18,6 +18,18 @@ export default getRequestConfig(async () => {
   const postList = (await import(`../../messages/${locale}/postList.json`)).default;
   return {
     locale,
-    messages: { edit,postList, categoryList, createPost, layoutPost, post, detailPost, layoutAdmin, userList, auth, home },
+    messages: {
+      edit,
+      postList,
+      categoryList,
+      createPost,
+      layoutPost,
+      post,
+      detailPost,
+      layoutAdmin,
+      userList,
+      auth,
+      home,
+    },
   };
 });
