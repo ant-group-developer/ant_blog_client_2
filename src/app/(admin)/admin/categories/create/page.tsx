@@ -8,6 +8,13 @@ import { categoryService } from '@/service/categoryService';
 import { useAuthStore } from '@/store/authStore';
 import { useTranslations } from 'next-intl';
 
+interface CreateCategoryFormValues {
+  name_vi: string;
+  name_en: string;
+  slug: string;
+  order: number;
+}
+
 export default function CreateCategoryPage() {
   const [form] = Form.useForm();
   const router = useRouter();
@@ -15,7 +22,7 @@ export default function CreateCategoryPage() {
   const { currentUser } = useAuthStore();
   const t = useTranslations('categoryList');
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: CreateCategoryFormValues) => {
     if (!currentUser?.id) {
       messageApi.error(t('unspecified'));
       return;
@@ -30,8 +37,12 @@ export default function CreateCategoryPage() {
       await categoryService.createCategory(payload);
       messageApi.success(t('createSuccess'));
       router.push('/admin/categories');
-    } catch (error: any) {
-      messageApi.error(error.response?.data?.message || t('createFailed'));
+    } catch (error: unknown) {
+      const errorMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      messageApi.error(errorMessage || t('createFailed'));
     }
   };
 
