@@ -8,6 +8,12 @@ import { userService } from '@/service/userService';
 import { jwtDecode } from 'jwt-decode';
 import { useTranslations } from 'next-intl';
 
+interface JwtPayload {
+  id?: string;
+  email?: string;
+  [key: string]: unknown;
+}
+
 const { Title, Text } = Typography;
 
 export default function LoginForm() {
@@ -34,7 +40,7 @@ export default function LoginForm() {
 
       // Giải mã JWT để lưu thông tin user
       try {
-        const decoded: any = jwtDecode(res.accessToken);
+        const decoded: JwtPayload = jwtDecode(res.accessToken);
         localStorage.setItem('currentUser', JSON.stringify(decoded));
       } catch {
         // Bỏ qua nếu không decode được
@@ -42,9 +48,13 @@ export default function LoginForm() {
 
       messageApi.success(t('login.successMessage'));
       setTimeout(() => router.push('/posts'), 800);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      messageApi.error(error.response?.data?.message || t('login.loginFaild'));
+      const errorMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      messageApi.error(errorMessage || t('login.loginFaild'));
     } finally {
       setLoading(false);
     }

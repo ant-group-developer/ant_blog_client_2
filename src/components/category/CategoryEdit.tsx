@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Button, message } from 'antd';
+import { Modal, Form, Input, message } from 'antd';
 import { useUpdateCategory } from '@/hooks/useCategories';
 import { Category } from '@/types';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 interface CategoryEditProps {
   open: boolean;
@@ -15,7 +15,6 @@ interface CategoryEditProps {
 
 export default function CategoryEdit({ open, onClose, category, onUpdate }: CategoryEditProps) {
   const [form] = Form.useForm();
-  const locale = useLocale();
   const updateMutation = useUpdateCategory();
   const [messageApi, contextHolder] = message.useMessage();
   const t = useTranslations('edit');
@@ -69,9 +68,13 @@ export default function CategoryEdit({ open, onClose, category, onUpdate }: Cate
       messageApi.success(t('updateSuccess'));
       onUpdate?.({ ...category, ...payload });
       onClose();
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || t('updateFailed');
-      messageApi.error(errorMsg);
+    } catch (error: unknown) {
+      console.error(error);
+      const errorMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      messageApi.error(errorMessage || t('updateFailed'));
     }
   };
 

@@ -1,7 +1,7 @@
 // app/(public)/posts/[id]/page.tsx
 'use client';
 
-import React, { use } from 'react';
+import React from 'react';
 import { Card, Typography, Tag, Button, Spin, Space, Avatar, Divider } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -17,6 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { categoryService } from '@/service/categoryService';
 import type { Category } from '@/types';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -115,7 +116,6 @@ export default function PostDetailPage() {
         </Button>
       </div>
 
-      {/* 1. Thumbnail Image Hero */}
       <div
         style={{
           position: 'relative',
@@ -129,10 +129,12 @@ export default function PostDetailPage() {
         }}
       >
         {post.thumbnail && (
-          <img
+          <Image
             src={post.thumbnail}
             alt={post.title_vi}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            fill
+            style={{ objectFit: 'cover' }}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         )}
         <div

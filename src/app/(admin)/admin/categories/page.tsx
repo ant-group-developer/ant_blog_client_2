@@ -1,24 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PageContainer, DragSortTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { Button, Space, message, Popconfirm, Input, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { categoryService } from '@/service/categoryService';
 import { Category } from '@/types';
 import CategoryEdit from '@/components/category/CategoryEdit';
 import { useAuthStore } from '@/store/authStore';
 
-const { Search } = Input;
-
 export default function CategoriesPage() {
   const router = useRouter();
-  const locale = useLocale();
   const queryClient = useQueryClient();
   const { currentUser } = useAuthStore();
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -39,7 +36,7 @@ export default function CategoriesPage() {
       }),
   });
 
-  const categories: Category[] = data?.data || [];
+  const categories = useMemo(() => data?.data || [], [data?.data]);
   const paginationData = data?.pagination;
 
   useEffect(() => {
@@ -101,7 +98,7 @@ export default function CategoriesPage() {
       key: 'name_vi',
       width: 250,
       ellipsis: true,
-      render: (text: any) => <strong style={{ fontSize: 14 }}>{text}</strong>,
+      render: (dom: React.ReactNode) => <strong style={{ fontSize: 14 }}>{dom}</strong>,
     },
     {
       title: t('nameEn'),
@@ -109,9 +106,9 @@ export default function CategoriesPage() {
       key: 'name_en',
       width: 250,
       ellipsis: true,
-      render: (text: any) =>
-        text ? (
-          <span style={{ color: '#595959' }}>{text}</span>
+      render: (dom: React.ReactNode) =>
+        dom ? (
+          <span style={{ color: '#595959' }}>{dom}</span>
         ) : (
           <Tag color="orange">{t('notSet')}</Tag>
         ),
@@ -122,7 +119,7 @@ export default function CategoriesPage() {
       key: 'slug',
       width: 200,
       ellipsis: true,
-      render: (text: any) => (
+      render: (dom: React.ReactNode) => (
         <code
           style={{
             background: '#f5f5f5',
@@ -132,7 +129,7 @@ export default function CategoriesPage() {
             color: '#1890ff',
           }}
         >
-          {text}
+          {dom}
         </code>
       ),
     },
@@ -141,7 +138,7 @@ export default function CategoriesPage() {
       key: 'action',
       width: 140,
       align: 'center',
-      render: (_: any, record: Category) => (
+      render: (_: unknown, record: Category) => (
         <Space size="small">
           <Button
             type="link"

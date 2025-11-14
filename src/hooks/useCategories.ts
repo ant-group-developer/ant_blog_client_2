@@ -44,13 +44,18 @@ export const useUpdateCategory = () => {
     onSuccess: (res) => {
       const updatedCategory = res.data;
 
-      queryClient.setQueriesData({ queryKey: ['categories'] }, (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          data: old.data.map((c: Category) => (c.id === updatedCategory.id ? updatedCategory : c)),
-        };
-      });
+      queryClient.setQueriesData(
+        { queryKey: ['categories'] },
+        (old: { data: Category[] } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            data: old.data.map((c: Category) =>
+              c.id === updatedCategory.id ? updatedCategory : c
+            ),
+          };
+        }
+      );
 
       queryClient.invalidateQueries({ queryKey: ['categories'] });
     },

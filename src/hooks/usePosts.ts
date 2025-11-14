@@ -35,7 +35,7 @@ export const useCreatePost = () => {
       // Invalidate tất cả queries có key 'posts' để refetch data mới
       queryClient.invalidateQueries({ queryKey: ['posts'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Create post error:', error);
     },
   });
@@ -63,13 +63,16 @@ export const useUpdatePost = () => {
     onSuccess: (res) => {
       const updatedPost = res.data;
 
-      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          data: old.data.map((p: Post) => (p.id === updatedPost.id ? updatedPost : p)),
-        };
-      });
+      queryClient.setQueriesData(
+        { queryKey: ['posts'] },
+        (old: { data: Post[]; total: number } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            data: old.data.map((p: Post) => (p.id === updatedPost.id ? updatedPost : p)),
+          };
+        }
+      );
 
       queryClient.invalidateQueries({ queryKey: ['posts'] });
     },
@@ -83,14 +86,17 @@ export const useDeletePost = () => {
     mutationFn: (id: string | number) => postService.deletePost(id),
     onSuccess: (_, deletedId) => {
       // Cập nhật cache bằng cách loại bỏ post đã xóa
-      queryClient.setQueriesData({ queryKey: ['posts'] }, (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          data: old.data.filter((p: Post) => p.id !== deletedId),
-          total: old.total - 1,
-        };
-      });
+      queryClient.setQueriesData(
+        { queryKey: ['posts'] },
+        (old: { data: Post[]; total: number } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            data: old.data.filter((p: Post) => p.id !== deletedId),
+            total: old.total - 1,
+          };
+        }
+      );
 
       // Invalidate để đảm bảo
       queryClient.invalidateQueries({ queryKey: ['posts'] });

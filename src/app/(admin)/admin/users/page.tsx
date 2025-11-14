@@ -15,10 +15,7 @@ import UserEdit from '@/components/user/UserEdit';
 import { User } from '@/types';
 import { useLocale, useTranslations } from 'next-intl';
 
-const { Search } = Input;
-
 export default function UserListPage() {
-  const router = useRouter();
   const { currentUser } = useAuthStore();
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
@@ -42,8 +39,12 @@ export default function UserListPage() {
           messageApi.success(t('updateSuccess'));
           setEditingUser(null);
         },
-        onError: (err: any) => {
-          messageApi.error(err.response?.data?.message || t('updateFailed'));
+        onError: (err: unknown) => {
+          const errorMessage =
+            err instanceof Error && 'response' in err
+              ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+              : undefined;
+          messageApi.error(errorMessage || t('updateFailed'));
         },
       }
     );

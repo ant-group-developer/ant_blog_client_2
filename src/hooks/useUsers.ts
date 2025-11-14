@@ -31,15 +31,19 @@ export const useUpdateUser = () => {
     mutationFn: async ({ id, payload }: { id: string; payload: Partial<User> }) => {
       const res = await userService.updateUser(id, payload);
 
-      // ✅ FIX: Nếu vẫn không có data, tạo updated user từ payload + cache cũ
       if (!res.data) {
-        const cachedUsers = queryClient.getQueriesData<any>({ queryKey: ['users'] });
+        const cachedUsers = queryClient.getQueriesData<{ data: User[]; total?: number }>({
+          queryKey: ['users'],
+        });
         let existingUser: User | null = null;
 
         for (const [, queryData] of cachedUsers) {
           if (queryData?.data) {
-            existingUser = queryData.data.find((u: User) => u.id === id);
-            if (existingUser) break;
+            const found = queryData.data.find((u: User) => u.id === id);
+            if (found) {
+              existingUser = found;
+              break;
+            }
           }
         }
 
@@ -67,7 +71,7 @@ export const useUpdateUser = () => {
 
       return res;
     },
-    onSuccess: (res, variables) => {
+    onSuccess: (res) => {
       const updatedUser = res.data;
 
       if (!updatedUser) {
@@ -82,13 +86,16 @@ export const useUpdateUser = () => {
       }
 
       //  Cập nhật cache với optimistic update
-      queryClient.setQueriesData({ queryKey: ['users'] }, (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          data: old.data.map((u: User) => (u.id === updatedUser.id ? updatedUser : u)),
-        };
-      });
+      queryClient.setQueriesData(
+        { queryKey: ['users'] },
+        (old: { data: User[]; total?: number } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            data: old.data.map((u: User) => (u.id === updatedUser.id ? updatedUser : u)),
+          };
+        }
+      );
 
       // Invalidate để đảm bảo data đồng bộ
       queryClient.invalidateQueries({ queryKey: ['users'] });

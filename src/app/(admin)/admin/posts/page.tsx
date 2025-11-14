@@ -11,8 +11,6 @@ import PostEdit from '@/components/post/PostEdit';
 import { Post } from '@/types';
 import { useTranslations } from 'next-intl';
 
-const { Search } = Input;
-
 export default function PostListPage() {
   const router = useRouter();
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -38,8 +36,12 @@ export default function PostListPage() {
           messageApi.success(t('updateSuccess'));
           setEditingPost(null);
         },
-        onError: (err: any) => {
-          messageApi.error(err.response?.data?.message || t('updateFailed'));
+        onError: (err: unknown) => {
+          const errorMessage =
+            err instanceof Error && 'response' in err
+              ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+              : undefined;
+          messageApi.error(errorMessage || t('updateFailed'));
         },
       }
     );
@@ -51,8 +53,12 @@ export default function PostListPage() {
         messageApi.success(t('deleteSuccess'));
         setParams((p) => ({ ...p })); // trigger refetch
       },
-      onError: (err: any) => {
-        messageApi.error(err.response?.data?.message || t('deleteFailed'));
+      onError: (err: unknown) => {
+        const errorMessage =
+          err instanceof Error && 'response' in err
+            ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+            : undefined;
+        messageApi.error(errorMessage || t('deleteFailed'));
       },
     });
   };
@@ -76,6 +82,7 @@ export default function PostListPage() {
           {record.thumbnail ? (
             <Image
               src={record.thumbnail}
+              alt={record.title_vi || 'Post thumbnail'}
               width={40}
               height={40}
               style={{ objectFit: 'cover', borderRadius: 4 }}

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ProLayout, PageContainer } from '@ant-design/pro-components';
+import { PageContainer } from '@ant-design/pro-components';
 import {
   ReadOutlined,
   HomeOutlined,
@@ -10,12 +10,12 @@ import {
   UserOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
-import { theme, Dropdown, Avatar, Space, Typography, Button, message } from 'antd';
+import { theme, Dropdown, Avatar, Typography, Button, message } from 'antd';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import ClientOnlyProLayout from '@/components/ClientOnlyProLayout';
 
 const { Text } = Typography;
@@ -24,7 +24,7 @@ const { Text } = Typography;
 function UserAvatarDropdown() {
   const router = useRouter();
   const { currentUser, logout } = useAuthStore();
-  const [messageApi, contextHolder] = message.useMessage();
+  const [messageApi] = message.useMessage();
 
   const t = useTranslations('layoutPost');
 
@@ -116,7 +116,6 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
   const { token } = theme.useToken();
   const pathname = usePathname();
   const t = useTranslations('layoutPost');
-  const locale = useLocale();
 
   return (
     <ClientOnlyProLayout

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Form, Input, Button, Card, Typography, Divider, message } from 'antd';
+import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { userService } from '@/service/userService';
 import { useTranslations } from 'next-intl';
@@ -27,9 +27,13 @@ export default function RegisterForm() {
       setTimeout(() => {
         window.location.href = '/auth/login';
       }, 800);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      messageApi.error(error?.message || t('register.errorMessage'));
+      const errorMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      messageApi.error(errorMessage || t('register.errorMessage'));
     }
   };
 

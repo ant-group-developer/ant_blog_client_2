@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Card,
   Form,
@@ -26,6 +26,18 @@ import { useTranslations } from 'next-intl';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
+
+interface CreatePostFormValues {
+  title_vi: string;
+  title_en?: string;
+  description_vi: string;
+  description_en?: string;
+  content_vi: string;
+  content_en?: string;
+  slug?: string;
+  thumbnail: string;
+  category_id: string;
+}
 
 export default function CreatePostPage() {
   const [form] = Form.useForm();
@@ -57,18 +69,22 @@ export default function CreatePostPage() {
   const { currentUser } = useAuthStore();
 
   // Hiển thị lỗi nếu không load được categories
-  React.useEffect(() => {
+  const showErrorMessage = useCallback(() => {
     if (isError) {
       messageApi.error(`${t('errorLoading')} ${error?.message || t('errorInvalid')}`);
     }
-  }, [isError, error, messageApi]);
+  }, [isError, error, messageApi, t]);
+
+  React.useEffect(() => {
+    showErrorMessage();
+  }, [showErrorMessage]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
     setThumbnailPreview(url);
   };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: CreatePostFormValues) => {
     if (!currentUser?.id) {
       messageApi.error(t('loginError'));
       return;
@@ -94,8 +110,12 @@ export default function CreatePostPage() {
       setTimeout(() => {
         router.push('/admin/posts');
       }, 1000);
-    } catch (error: any) {
-      messageApi.error(error.response?.data?.message || t('error'));
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      messageApi.error(errorMessage || t('error'));
     }
   };
 

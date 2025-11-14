@@ -68,9 +68,13 @@ export default function UserEdit({ open, onClose, user, currentUserId, onUpdate 
 
       messageApi.success(t('updateSuccess'));
       onClose();
-    } catch (error: any) {
-      console.error('Update user error:', error);
-      messageApi.error(error.response?.data?.message || t('updateFailed'));
+    } catch (error: unknown) {
+      console.error(error);
+      const errorMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      messageApi.error(errorMessage || t('updateFailed'));
     }
   };
 

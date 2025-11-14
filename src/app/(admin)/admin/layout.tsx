@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ProLayout } from '@ant-design/pro-components';
 import {
   HomeOutlined,
   UserOutlined,
@@ -26,10 +25,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const antdLocale = useAntdLocale();
   const t = useTranslations('layoutAdmin');
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     router.push('/auth/login');
-  };
+  }, [logout, router]);
 
   // === Avatar menu memoized ===
   const avatarMenu: MenuProps['items'] = useMemo(() => {
@@ -52,7 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         onClick: handleLogout,
       },
     ];
-  }, [currentUser, t]);
+  }, [currentUser, t, handleLogout]);
 
   // === Sider menu memoized ===
   const siderRoutes = useMemo(

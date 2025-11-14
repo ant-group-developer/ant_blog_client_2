@@ -1,7 +1,6 @@
-// app/(public)/posts/page.tsx
 'use client';
 
-import React, { use } from 'react';
+import React from 'react';
 import { Button, Typography } from 'antd';
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';

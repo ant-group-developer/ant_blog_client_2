@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, message } from 'antd';
 import { EditOutlined, LinkOutlined } from '@ant-design/icons';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import type { Post } from '@/types';
 import { useUpdatePost } from '@/hooks/usePosts'; // Dùng hook mutation
 
@@ -19,7 +19,6 @@ interface PostEditProps {
 export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProps) {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
-  const locale = useLocale();
   const t = useTranslations('edit');
 
   const updateMutation = useUpdatePost();
@@ -84,9 +83,13 @@ export default function PostEdit({ open, onClose, post, onUpdate }: PostEditProp
       messageApi.success(t('updateSuccess'));
       onUpdate?.({ ...post, ...payload });
       onClose();
-    } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || t('updateFailed');
-      messageApi.error(errorMsg);
+    } catch (error: unknown) {
+      console.error(error);
+      const errorMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      messageApi.error(errorMessage || t('updateFailed'));
     }
   };
 
